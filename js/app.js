@@ -3,6 +3,7 @@ import * as store from './store.js';
 import { state } from './store.js';
 import { renderPitch, LEGEND } from './pitch.js';
 import { icon, CATEGORY_ICON } from './icons.js';
+import { QUOTES, STORIES, FAQ, LESSONS, LESSON_XP_PER_CORRECT } from './content.js';
 
 const app = document.getElementById('app');
 let cleanups = [];
@@ -74,7 +75,8 @@ function bestStreak() {
   return best;
 }
 
-const xpTotal = () => state.completions.length * XP_PER;
+const lessonXp = () => Object.values(state.lessons || {}).reduce((a, r) => a + r.score * LESSON_XP_PER_CORRECT, 0);
+const xpTotal = () => state.completions.length * XP_PER + lessonXp();
 const levelInfo = () => {
   const xp = xpTotal();
   const lvl = Math.floor(xp / 500) + 1;
@@ -108,7 +110,7 @@ function topbar({ eyebrow = 'Жаттықтырушы', title, back = false }) {
       ${back ? '' : `<div class="eyebrow">${esc(eyebrow)}</div>`}
       <h1>${esc(title)}</h1>
     </div>
-    ${back ? '' : `<button class="icon-btn" aria-label="Хабарламалар" data-bell>${icon('bell', { size: 22 })}</button>`}
+    ${back ? '' : `<a class="icon-btn" href="#/ask" aria-label="Бапкерге сұрақ">${icon('chat', { size: 22 })}</a>`}
     <a href="#/profile" class="avatar" aria-label="Профиль">${esc(initials(name))}</a>
   </header>`;
 }
@@ -116,6 +118,7 @@ function topbar({ eyebrow = 'Жаттықтырушы', title, back = false }) {
 function nav(active) {
   const items = [
     ['home', '#/', 'home', 'Басты'],
+    ['lessons', '#/lessons', 'school', 'Сабақтар'],
     ['drills', '#/drills', 'drills', 'Жаттығулар'],
     ['progress', '#/progress', 'chart', 'Прогресс'],
     ['profile', '#/profile', 'user', 'Профиль'],
@@ -216,6 +219,8 @@ function viewHome() {
       </div>
     </section>
 
+    ${quoteCard(QUOTES[dayIndex(day) % QUOTES.length], 'Күн сөзі')}
+
     <div class="section-title">
       <h3 class="h-md">${icon('drills', { size: 22, cls: 'green' })} Бүгінгі жоспар</h3>
       <span class="label muted">Жалпы: ${totalMin} мин</span>
@@ -226,6 +231,19 @@ function viewHome() {
         status: store.isDone(e.id, day) ? 'done' : 'wait',
         next: nextEx && e.id === nextEx.id,
       })).join('')}
+    </div>
+
+    ${homeLessonCard()}
+
+    <div class="grid2">
+      <a href="#/stories" class="card feature" style="--c:var(--orange)">
+        <span class="f-ic">${icon('trophy', { size: 22 })}</span>
+        <b>Аңыздар жолы</b><small>Жұлдыздар қалай кәсіби ойыншы болды</small>
+      </a>
+      <a href="#/ask" class="card feature" style="--c:var(--cyan)">
+        <span class="f-ic">${icon('chat', { size: 22 })}</span>
+        <b>Бапкерге сұрақ</b><small>Өз сұрағыңды қой</small>
+      </a>
     </div>
 
     <section class="card tip-card">
@@ -505,18 +523,12 @@ const MOODS = [
   ['🧘', 'Салмақты', 'Зейін толық'],
   ['🌪️', 'Толқу бар', 'Бақылауда'],
 ];
-const QUOTES = [
-  ['Табыс — дайындық пен мүмкіндіктің кездесуі.', 'Сенека'],
-  ['Жеңіс бір күнде келмейді — ол күн сайынғы еңбектен құралады.', 'Бапкер кеңесі'],
-  ['Қателік — сабақ. Оны қайталамау — шеберлік.', 'Бапкер кеңесі'],
-  ['Алаңда ең мықты бұлшықет — ми.', 'Бапкер кеңесі'],
-];
 
 function viewMental(ex, day) {
   const p = ex.payload;
   const isDone = store.isDone(ex.id, day);
   const existing = state.completions.find((c) => c.exercise_id === ex.id && c.day === day)?.note || '';
-  const [qt, qa] = QUOTES[dayIndex(day) % QUOTES.length];
+  const quote = QUOTES[(dayIndex(day) + 5) % QUOTES.length];
   const breath = p.breath;
   const cycleSec = breath ? breath.reduce((a, b) => a + b, 0) : 0;
   const totalSec = breath ? cycleSec * p.rounds : 0;
@@ -555,10 +567,7 @@ function viewMental(ex, day) {
       <div class="row between dim" style="font-size:12px"><span class="row" style="gap:4px">${icon('lock', { size: 12 })} Жеке жазба</span><span data-count>0 / 500</span></div>
     </section>
 
-    <section class="card quote-card">
-      <div class="q-ic">${icon('quote', { size: 24 })}</div>
-      <div><div class="label" style="color:var(--orange)">Күн ойы</div><p>«${esc(qt)}»</p><small class="muted">— ${esc(qa)}</small></div>
-    </section>
+    ${quoteCard(quote, 'Күн ойы')}
 
     <div data-actions>${isDone
       ? `<a class="btn btn-secondary" href="#/">${icon('home', { size: 20 })} Басты бетке</a>`
@@ -707,6 +716,8 @@ function viewProgress() {
   const byCat = (c) => state.completions.filter((x) => x.category === c).length;
   const fullDays = [...new Set(state.completions.map((c) => c.day))].filter((d) => doneOn(d).length >= 4).length;
   const best = bestStreak();
+  const lessonsDone = Object.keys(state.lessons || {}).length;
+  const perfect = Object.values(state.lessons || {}).filter((r) => r.score === r.total).length;
 
   const badges = [
     ['flame', 'Алғашқы қадам', 'Бірінші жаттығу', state.completions.length, 1, 'var(--orange)'],
@@ -715,6 +726,8 @@ function viewProgress() {
     ['bolt', 'Жүйрік', '10 физикалық жаттығу', byCat('physical'), 10, 'var(--cyan)'],
     ['trophy', 'Толық күн', '4 бөлімді бір күнде', fullDays, 1, 'var(--purple)'],
     ['medal', 'Апта чемпионы', 'Аптада 5 белсенді күн', activeDays, 5, 'var(--purple)'],
+    ['school', 'Тактик-ғалым', '4 позиция сабағы', lessonsDone, 4, 'var(--cyan)'],
+    ['star', 'Мінсіз сабақ', 'Сабақта барлық жауап дұрыс', perfect, 1, 'var(--green)'],
   ];
   const got = badges.filter((b) => b[3] >= b[4]).length;
 
@@ -767,6 +780,7 @@ function viewProgress() {
       <div class="card list-link"><div class="s-ic green">${icon('clock', { size: 22 })}</div><div style="flex:1"><div class="muted" style="font-size:13px">Барлық жаттығу уақыты</div><b>${totalMin >= 60 ? `${Math.floor(totalMin / 60)} сағ ${totalMin % 60} мин` : `${totalMin} мин`}</b></div></div>
       <div class="card list-link"><div class="s-ic" style="color:var(--cyan)">${icon('checkCircle', { size: 22 })}</div><div style="flex:1"><div class="muted" style="font-size:13px">Орындалған сабақтар</div><b>${state.completions.length} сабақ</b></div></div>
       <div class="card list-link"><div class="s-ic" style="color:var(--orange)">${icon('target', { size: 22 })}</div><div style="flex:1"><div class="muted" style="font-size:13px">Дұрыс тактикалық шешімдер</div><b>${acc === null ? '—' : `${acc}% нәтиже`}</b></div></div>
+      <a href="#/lessons" class="card list-link"><div class="s-ic" style="color:var(--purple)">${icon('school', { size: 22 })}</div><div style="flex:1"><div class="muted" style="font-size:13px">Позиция сабақтары</div><b>${lessonsDone} / ${LESSONS.length} сабақ</b></div><span class="dim">${icon('chevronRight', { size: 20 })}</span></a>
     </div>
 
     <section class="card lg">
@@ -870,6 +884,10 @@ function viewProfile() {
       </div>
     </section>
     ${state.mode !== 'cloud' ? `<div class="msg">Қонақ режимінде прогресс тек осы құрылғыда сақталады. Басқа телефоннан да кіру үшін аккаунт ашыңыз.</div>` : ''}
+    <div class="grid2">
+      <a href="#/stories" class="card feature" style="--c:var(--orange)"><span class="f-ic">${icon('trophy', { size: 22 })}</span><b>Аңыздар жолы</b><small>Тарихтар мен сөздер</small></a>
+      <a href="#/ask" class="card feature" style="--c:var(--cyan)"><span class="f-ic">${icon('chat', { size: 22 })}</span><b>Бапкерге сұрақ</b><small>${state.questions.filter((q) => q.mine).length} сұрақ</small></a>
+    </div>
     <h3 class="h-md">Баптаулар</h3>
     ${profileForm(p)}
     <button class="btn btn-primary" data-save>${icon('check', { size: 20 })} Сақтау</button>
@@ -966,6 +984,346 @@ function authError(e) {
   return 'Қате орын алды. Интернетті тексеріп, қайта көріңіз.';
 }
 
+// ───────────── Мотивация карточкасы ─────────────
+function quoteCard(q, label = 'Күн сөзі') {
+  return `<section class="card quote-card">
+    <div class="q-ic">${icon('quote', { size: 24 })}</div>
+    <div style="min-width:0">
+      <div class="label" style="color:var(--orange)">${esc(label)}</div>
+      <p>«${esc(q.text)}»</p>
+      <small class="muted">— ${esc(q.author)}${q.role ? `, <span class="dim">${esc(q.role)}</span>` : ''}</small>
+    </div>
+  </section>`;
+}
+
+// ───────────── Позиция мектебі ─────────────
+const lessonsFor = (pos) => LESSONS.filter((l) => !pos || l.position === pos);
+
+function homeLessonCard() {
+  const pos = state.profile?.position;
+  const list = lessonsFor(pos);
+  const next = list.find((l) => !state.lessons[l.id]) || list[0];
+  if (!next) return '';
+  const r = state.lessons[next.id];
+  return `<a href="#/lesson/${next.id}" class="card lesson-hero">
+    <div class="row between" style="margin-bottom:8px">
+      <span class="label green">${icon('school', { size: 14 })} ${esc(POSITIONS[next.position])} мектебі</span>
+      <span class="chip gray">${next.questions.length} сұрақ · ${next.duration_min} мин</span>
+    </div>
+    <div class="h-md">${esc(next.title)}</div>
+    <div class="muted" style="font-size:13px;margin-top:4px">${esc(next.summary)}</div>
+    <div class="row" style="margin-top:12px;gap:8px;color:var(--green);font:700 13px var(--head)">${r ? 'Қайта өту' : 'Сабақты бастау'} ${icon('arrowRight', { size: 16 })}</div>
+  </a>`;
+}
+
+let lessonPos = null;
+function viewLessons() {
+  if (lessonPos === null) lessonPos = state.profile?.position || 'all';
+  const list = lessonsFor(lessonPos === 'all' ? null : lessonPos);
+  const doneCount = LESSONS.filter((l) => state.lessons[l.id]).length;
+  const html = `${topbar({ title: 'Сабақтар' })}
+  <main class="page fade-in">
+    <div>
+      <h2 class="h-lg">Позиция мектебі</h2>
+      <p class="muted" style="margin:6px 0 0">Әр позицияға арналған тактикалық сабақтар: қысқа теория, алаңдағы жағдай және сұрақтар.</p>
+    </div>
+    <div class="card row" style="gap:14px">
+      ${ring(doneCount, LESSONS.length, { size: 64, stroke: 7, label: `${doneCount}`, sub: '' })}
+      <div><b style="font:800 16px var(--head)">${doneCount} / ${LESSONS.length} сабақ өтілді</b><div class="muted" style="font-size:13px">Әр дұрыс жауап +${LESSON_XP_PER_CORRECT} XP береді</div></div>
+    </div>
+    <div class="filters">
+      <button class="filter ${lessonPos === 'all' ? 'on' : ''}" data-p="all">Барлығы</button>
+      ${Object.entries(POSITIONS).map(([k, v]) => `<button class="filter ${lessonPos === k ? 'on' : ''}" data-p="${k}">${v}${state.profile?.position === k ? ' ★' : ''}</button>`).join('')}
+    </div>
+    <div class="stack">
+      ${list.map((l) => {
+        const r = state.lessons[l.id];
+        const pct = r ? Math.round((r.score / r.total) * 100) : 0;
+        return `<a href="#/lesson/${l.id}" class="drill" style="--c:var(--green)">
+          <div class="d-icon">${icon('school', { size: 26 })}</div>
+          <div class="d-body">
+            <div class="d-meta">${esc(POSITIONS[l.position])} <span class="t">· ${l.questions.length} сұрақ · ${l.duration_min} мин</span></div>
+            <div class="d-title">${esc(l.title)}</div>
+            <div class="d-sub">${esc(l.summary)}</div>
+          </div>
+          ${r ? `<span class="status done">${r.score}/${r.total}</span>` : `<span class="dim">${icon('chevronRight', { size: 20 })}</span>`}
+          ${r ? `<i class="mini-bar" style="width:${pct}%"></i>` : ''}
+        </a>`;
+      }).join('')}
+    </div>
+  </main>
+  ${nav('lessons')}`;
+  const mount = () => {
+    app.querySelectorAll('[data-p]').forEach((b) => { b.onclick = () => { lessonPos = b.dataset.p; render(); }; });
+  };
+  return { html, mount };
+}
+
+function viewLesson(id) {
+  const lesson = LESSONS.find((l) => l.id === id);
+  if (!lesson) return { html: `${topbar({ title: 'Табылмады', back: true })}<main class="page"><p>Сабақ табылмады.</p></main>` };
+  const qs = lesson.questions;
+  const st = { step: 0, answers: [] }; // 0 — теория, 1..n — сұрақтар, n+1 — нәтиже
+  const html = `${topbar({ title: 'Сабақ', back: true })}<main class="page no-nav fade-in" data-lesson></main>`;
+
+  const mount = () => {
+    const root = app.querySelector('[data-lesson]');
+    const header = () => `<div class="ex-head" style="--c:var(--green)">
+      <div class="row between">
+        <span class="chip"><span class="dot"></span>${esc(POSITIONS[lesson.position])} · ${lesson.duration_min} мин</span>
+        <span class="chip gray">${st.step === 0 ? 'Теория' : st.step <= qs.length ? `Сұрақ ${st.step} / ${qs.length}` : 'Нәтиже'}</span>
+      </div>
+      <h2 class="h-lg" style="margin-top:12px">${esc(lesson.title)}</h2>
+      <div class="progress-line"><i style="width:${(Math.min(st.step, qs.length + 1) / (qs.length + 1)) * 100}%"></i></div>
+    </div>`;
+
+    const draw = () => {
+      window.scrollTo(0, 0);
+      if (st.step === 0) {
+        root.innerHTML = `${header()}
+          <p class="muted" style="margin:0">${esc(lesson.summary)}</p>
+          <div class="stack">${lesson.theory.map((t, i) => `<section class="card theory">
+            <span class="n">${i + 1}</span>
+            <div><div class="h-sm">${esc(t.h)}</div><p class="muted" style="margin:6px 0 0;line-height:1.55">${esc(t.p)}</p></div>
+          </section>`).join('')}</div>
+          <button class="btn btn-primary" data-next>Сұрақтарға өту ${icon('arrowRight', { size: 20 })}</button>`;
+      } else if (st.step <= qs.length) {
+        const q = qs[st.step - 1];
+        const answered = st.answers[st.step - 1];
+        root.innerHTML = `${header()}
+          ${q.scheme ? `<section class="pitch-card">
+            <div data-pitch>${renderPitch(q.scheme, { uid: `${lesson.id}-${st.step}` })}</div>
+            <div class="legend">
+              <span><i style="background:#22E55B"></i>Біздің команда</span>
+              <span><i style="background:#F43F5E"></i>Қарсылас</span>
+              <span><i style="background:transparent;border:2px solid #FDE047"></i>Сен</span>
+              ${LEGEND.filter((l) => (q.scheme.arrows || []).some((a) => a.k === l.k)).map((l) =>
+                `<span><em style="border-color:${l.color};${l.dashed ? 'border-top-style:dashed' : ''}"></em>${l.label}</span>`).join('')}
+            </div>
+          </section>` : ''}
+          <section class="card lg">
+            <div class="label green" style="margin-bottom:10px">${icon('brain', { size: 14 })} Тактикалық шешім</div>
+            <h3 class="h-md" style="margin-bottom:14px">${esc(q.question)}</h3>
+            <div class="stack">${q.options.map((o, i) => `<button class="opt" data-opt="${i}"><span class="radio"></span><span><span class="tag" hidden></span>${esc(o)}</span></button>`).join('')}</div>
+          </section>
+          <div data-feedback></div>
+          <div data-actions></div>`;
+        const opts = [...root.querySelectorAll('[data-opt]')];
+        const reveal = (i) => {
+          opts.forEach((b, j) => {
+            b.disabled = true;
+            const tag = b.querySelector('.tag');
+            if (j === q.answer) { b.classList.add('right'); b.querySelector('.radio').innerHTML = icon('check', { size: 14 }); tag.hidden = false; tag.textContent = 'Дұрыс жауап'; tag.style.color = 'var(--green)'; }
+            else if (j === i) { b.classList.add('wrong'); b.querySelector('.radio').innerHTML = '✕'; tag.hidden = false; tag.textContent = 'Сенің жауабың'; tag.style.color = 'var(--red)'; }
+          });
+          const ok = i === q.answer;
+          root.querySelector('[data-feedback]').innerHTML = `<section class="feedback ${ok ? '' : 'bad'}">
+            <div class="row between" style="margin-bottom:10px">
+              <span class="h-md" style="color:${ok ? 'var(--green)' : '#FDA4AF'}">${ok ? 'Дұрыс! 👏' : 'Дәл емес'}</span>
+              ${ok ? `<span class="chip">${icon('bolt', { size: 12 })} +${LESSON_XP_PER_CORRECT} XP</span>` : ''}
+            </div>
+            <p style="margin:0;line-height:1.55">${esc(q.explain)}</p>
+          </section>`;
+          const last = st.step === qs.length;
+          root.querySelector('[data-actions]').innerHTML = `<button class="btn btn-primary" data-next>${last ? 'Нәтижені көру' : 'Келесі сұрақ'} ${icon('arrowRight', { size: 20 })}</button>`;
+          root.querySelector('[data-next]').onclick = () => { st.step++; draw(); };
+        };
+        opts.forEach((b) => { b.onclick = () => { st.answers[st.step - 1] = Number(b.dataset.opt); reveal(Number(b.dataset.opt)); }; });
+        if (answered !== undefined) reveal(answered);
+        return;
+      } else {
+        const score = st.answers.filter((a, i) => a === qs[i].answer).length;
+        const prev = state.lessons[lesson.id];
+        root.innerHTML = `${header()}
+          <section class="card lg" style="text-align:center">
+            <div style="display:flex;justify-content:center">${ring(score, qs.length, { size: 140, stroke: 12, label: `${score}/${qs.length}`, sub: 'дұрыс' })}</div>
+            <div class="h-md" style="margin-top:14px">${score === qs.length ? 'Керемет! Тактикалық сауатың жоғары 🏆' : score >= qs.length / 2 ? 'Жақсы нәтиже! 👍' : 'Түсіндірмелерді қайта оқып шық 💪'}</div>
+            <p class="muted" style="margin:6px 0 0" data-xp>${prev && prev.score >= score ? `Сенің ең жақсы нәтижең: ${prev.score}/${prev.total}` : `+${score * LESSON_XP_PER_CORRECT} XP`}</p>
+          </section>
+          ${lesson.drills.length ? `<div class="section-title"><h3 class="h-md">${icon('drills', { size: 20, cls: 'green' })} Алаңда бекіт</h3></div>
+          <div class="stack">${lesson.drills.map((d) => exById(d)).filter(Boolean).map((e) => drillCard(e, { day: today(), status: store.isDone(e.id, today()) ? 'done' : null })).join('')}</div>` : ''}
+          <div class="btn-row">
+            <button class="btn btn-secondary" data-retry>${icon('refresh', { size: 18 })} Қайта</button>
+            <a class="btn btn-primary" href="#/lessons">Сабақтар</a>
+          </div>`;
+        root.querySelector('[data-retry]').onclick = () => { st.step = 0; st.answers = []; draw(); };
+        store.saveLessonResult(lesson.id, score, qs.length)
+          .then((improved) => { if (improved && score) toast(`+${score * LESSON_XP_PER_CORRECT} XP — сабақ аяқталды!`); })
+          .catch((e) => { console.error(e); toast('Нәтижені сақтау сәтсіз болды'); });
+        return;
+      }
+      const nx = root.querySelector('[data-next]');
+      if (nx) nx.onclick = () => { st.step++; draw(); };
+    };
+    draw();
+  };
+  return { html, mount };
+}
+
+// ───────────── Аңыздар жолы және мотивация ─────────────
+let storiesTab = 'stories';
+function viewStories() {
+  const html = `${topbar({ title: 'Аңыздар', back: true })}
+  <main class="page no-nav fade-in">
+    <div>
+      <h2 class="h-lg">Аңыздар жолы</h2>
+      <p class="muted" style="margin:6px 0 0">Әлемдік жұлдыздар да бір кезде сен сияқты бастаған. Олардың жолы мен бапкерлердің сөзі — мотивация көзі.</p>
+    </div>
+    <div class="filters">
+      <button class="filter ${storiesTab === 'stories' ? 'on' : ''}" data-t="stories">Ойыншылар тарихы</button>
+      <button class="filter ${storiesTab === 'quotes' ? 'on' : ''}" data-t="quotes">Бапкерлер сөзі</button>
+    </div>
+    ${storiesTab === 'stories'
+      ? `<div class="stack">${STORIES.map((p) => `<a href="#/story/${p.id}" class="card story-card" style="--c:${p.color}">
+          <div class="s-avatar">${esc(initials(p.name))}</div>
+          <div style="flex:1;min-width:0">
+            <div class="h-sm">${esc(p.name)}</div>
+            <div class="muted" style="font-size:13px">${esc(p.country)} · ${esc(p.position)}</div>
+            <div class="dim" style="font-size:12px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.lesson)}</div>
+          </div>
+          <span class="dim">${icon('chevronRight', { size: 20 })}</span>
+        </a>`).join('')}</div>`
+      : `<div class="stack">${QUOTES.map((q) => quoteCard(q, q.role && q.role.includes('Бапкер') ? 'Бапкер' : 'Аңыз')).join('')}</div>
+         <p class="dim" style="font-size:12px;margin:0">Сөздер қазақ тіліне аударылған.</p>`}
+  </main>`;
+  const mount = () => { app.querySelectorAll('[data-t]').forEach((b) => { b.onclick = () => { storiesTab = b.dataset.t; render(); }; }); };
+  return { html, mount };
+}
+
+function viewStory(id) {
+  const p = STORIES.find((x) => x.id === id);
+  if (!p) return { html: `${topbar({ title: 'Табылмады', back: true })}<main class="page"><p>Тарих табылмады.</p></main>` };
+  const idx = STORIES.indexOf(p);
+  const next = STORIES[(idx + 1) % STORIES.length];
+  const block = (ic, title, text, color) => `<section class="card story-block" style="--c:${color}">
+    <div class="row" style="gap:10px;margin-bottom:8px"><span class="sb-ic">${icon(ic, { size: 18 })}</span><span class="label" style="color:${color}">${title}</span></div>
+    <p style="margin:0;line-height:1.6">${esc(text)}</p>
+  </section>`;
+  const html = `${topbar({ title: 'Аңыздар жолы', back: true })}
+  <main class="page no-nav fade-in">
+    <section class="hero story-hero" style="--c:${p.color}">
+      <div class="hero-ic">${icon('trophy', { size: 190 })}</div>
+      <div class="s-avatar lg">${esc(initials(p.name))}</div>
+      <h2 class="h-lg" style="margin-top:12px">${esc(p.name)}</h2>
+      <div class="muted">${esc(p.country)} · ${esc(p.position)}</div>
+    </section>
+    <section class="card">
+      <div class="label muted" style="margin-bottom:10px">Мансап жолы</div>
+      <div class="path">${p.path.map((c, i) => `<span class="path-step"><i style="background:${i === p.path.length - 1 ? p.color : 'var(--border-2)'}"></i>${esc(c)}</span>`).join('')}</div>
+    </section>
+    ${block('ball', 'Бастауы', p.start, 'var(--cyan)')}
+    ${block('flame', 'Қиындық', p.hardship, 'var(--orange)')}
+    ${block('trend', 'Бетбұрыс', p.turning, 'var(--green)')}
+    <section class="card lg" style="border-color:${p.color};background:linear-gradient(170deg, color-mix(in srgb, ${p.color} 14%, var(--card)), var(--card) 70%)">
+      <div class="label" style="color:${p.color};margin-bottom:8px">Саған сабақ</div>
+      <p style="margin:0;font:600 16px/1.5 var(--head)">${esc(p.lesson)}</p>
+    </section>
+    <a class="btn btn-secondary" href="#/story/${next.id}">Келесі: ${esc(next.name)} ${icon('arrowRight', { size: 18 })}</a>
+  </main>`;
+  return { html };
+}
+
+// ───────────── Бапкерге сұрақ ─────────────
+const Q_CATS = { tactics: 'Тактика', physical: 'Физика', mental: 'Психология', technique: 'Техника', other: 'Басқа' };
+const norm = (t) => t.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ');
+function faqMatches(text, limit = 2) {
+  const t = norm(text);
+  if (t.trim().length < 4) return [];
+  return FAQ.map((f) => ({ f, s: f.k.reduce((a, k) => a + (t.includes(k) ? 2 : 0), 0) + norm(f.q).split(/\s+/).filter((w) => w.length > 3 && t.includes(w)).length }))
+    .filter((x) => x.s >= 2).sort((a, b) => b.s - a.s).slice(0, limit).map((x) => x.f);
+}
+
+function faqItem(f, open = false) {
+  return `<details class="faq" ${open ? 'open' : ''}><summary>${esc(f.q)}<span>${icon('chevronRight', { size: 18 })}</span></summary><p>${esc(f.a)}</p></details>`;
+}
+
+const MONTHS = ['қаңтар', 'ақпан', 'наурыз', 'сәуір', 'мамыр', 'маусым', 'шілде', 'тамыз', 'қыркүйек', 'қазан', 'қараша', 'желтоқсан'];
+function fmtDate(iso) {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? '' : `${d.getDate()} ${MONTHS[d.getMonth()]}`;
+}
+
+let askCat = 'tactics';
+function viewAsk() {
+  const mine = state.questions.filter((q) => q.mine);
+  const others = state.questions.filter((q) => !q.mine && q.answer);
+  const guest = state.mode !== 'cloud';
+  const html = `${topbar({ title: 'Бапкерге сұрақ', back: true })}
+  <main class="page no-nav fade-in">
+    <section class="auth-hero" style="min-height:0;padding:22px">
+      <div class="big-ball" style="top:-40px;right:-40px">${icon('chat', { size: 180 })}</div>
+      <span class="chip cyan" style="width:fit-content">${icon('chat', { size: 12 })} Сұрақ-жауап</span>
+      <h2 class="h-lg" style="margin-top:12px">Сұрағың бар ма?</h2>
+      <p class="muted" style="margin:6px 0 0">Тактика, жаттығу, тамақтану, толқу — кез келген сұрағыңды жаз. Бапкерлер жауап береді, ал ұқсас сұрақтардың жауабын бірден көресің.</p>
+    </section>
+
+    <section class="card lg stack">
+      <span class="field-label" style="margin:0">Тақырып</span>
+      <div class="filters" style="flex-wrap:wrap">${Object.entries(Q_CATS).map(([k, v]) => `<button class="filter ${askCat === k ? 'on' : ''}" data-c="${k}">${v}</button>`).join('')}</div>
+      <textarea id="ask-text" class="field" maxlength="600" placeholder="Мысалы: Қорғаушы ретінде жылдам шабуылшыға қарсы қалай ойнаймын?"></textarea>
+      <div class="row between dim" style="font-size:12px"><span>${guest ? `${icon('info', { size: 12 })} Қонақ режимінде сұрақ тек осы құрылғыда сақталады` : `${icon('lock', { size: 12 })} Сұрағыңды тек сен және бапкер көреді`}</span><span data-count>0 / 600</span></div>
+      <div data-suggest></div>
+      <button class="btn btn-primary" data-send disabled>${icon('send', { size: 18 })} Сұрақты жіберу</button>
+    </section>
+
+    ${mine.length ? `<div class="section-title"><h3 class="h-md">${icon('chat', { size: 20, cls: 'green' })} Менің сұрақтарым</h3><span class="label muted">${mine.length}</span></div>
+    <div class="stack">${mine.map((q) => `<section class="card q-card">
+      <div class="row between" style="margin-bottom:8px">
+        <span class="chip gray">${esc(Q_CATS[q.category] || 'Басқа')}</span>
+        ${q.answer ? `<span class="status done">${icon('checkCircle', { size: 14 })} Жауап бар</span>` : `<span class="status wait">${icon('hourglass', { size: 12 })} ${guest ? 'Сақталды' : 'Жауап күтілуде'}</span>`}
+      </div>
+      <p style="margin:0;font-weight:600">${esc(q.text)}</p>
+      <small class="dim">${fmtDate(q.created_at)}</small>
+      ${q.answer ? `<div class="answer"><div class="label green" style="margin-bottom:6px">${icon('whistle', { size: 14 })} Бапкер жауабы</div><p style="margin:0;line-height:1.55">${esc(q.answer)}</p></div>` : ''}
+    </section>`).join('')}</div>` : ''}
+
+    ${others.length ? `<div class="section-title"><h3 class="h-md">Басқа ойыншылардың сұрақтары</h3></div>
+    <div class="stack">${others.map((q) => faqItem({ q: q.text, a: q.answer })).join('')}</div>` : ''}
+
+    <div class="section-title"><h3 class="h-md">${icon('book', { size: 20, cls: 'green' })} Жиі қойылатын сұрақтар</h3></div>
+    <div class="stack">${FAQ.map((f) => faqItem(f)).join('')}</div>
+  </main>`;
+
+  const mount = () => {
+    const ta = app.querySelector('#ask-text');
+    const send = app.querySelector('[data-send]');
+    const sug = app.querySelector('[data-suggest]');
+    const cnt = app.querySelector('[data-count]');
+    app.querySelectorAll('[data-c]').forEach((b) => {
+      b.onclick = () => { askCat = b.dataset.c; app.querySelectorAll('[data-c]').forEach((x) => x.classList.toggle('on', x === b)); };
+    });
+    let h;
+    ta.oninput = () => {
+      cnt.textContent = `${ta.value.length} / 600`;
+      send.disabled = ta.value.trim().length < 8;
+      clearTimeout(h);
+      h = setTimeout(() => {
+        const m = faqMatches(ta.value);
+        sug.innerHTML = m.length ? `<div class="label muted" style="margin-bottom:8px">Мүмкін, жауап осында бар:</div><div class="stack">${m.map((f) => faqItem(f, true)).join('')}</div>` : '';
+      }, 250);
+    };
+    send.onclick = async () => {
+      const text = ta.value.trim();
+      if (text.length < 8) return;
+      send.disabled = true;
+      try {
+        await store.askQuestion(text, askCat);
+        toast(guest ? 'Сұрақ сақталды' : 'Сұрақ бапкерге жіберілді');
+        render();
+      } catch (e) {
+        console.error(e);
+        toast('Жіберу сәтсіз болды. Қайта көріңіз.');
+        send.disabled = false;
+      }
+    };
+    if (!guest) store.refreshQuestions().then(() => {
+      const fresh = state.questions.filter((q) => q.mine && q.answer).length;
+      if (fresh !== mine.filter((q) => q.answer).length && location.hash.startsWith('#/ask')) render();
+    }).catch(() => {});
+  };
+  return { html, mount };
+}
+
 // ───────────── Маршрутизатор ─────────────
 function parseHash() {
   const h = location.hash.replace(/^#/, '') || '/';
@@ -986,8 +1344,13 @@ function render() {
   else {
     const { parts, params } = parseHash();
     const [r, id] = parts;
-    if (r !== 'ex') lastListPage = `#/${r || ''}`;
+    if (!r || ['drills', 'progress', 'profile', 'lessons'].includes(r)) lastListPage = `#/${r || ''}`;
     if (r === 'ex' && id) view = viewExercise(id, params.get('d') || today());
+    else if (r === 'lessons') view = viewLessons();
+    else if (r === 'lesson' && id) view = viewLesson(id);
+    else if (r === 'stories') view = viewStories();
+    else if (r === 'story' && id) view = viewStory(id);
+    else if (r === 'ask') view = viewAsk();
     else if (r === 'drills') view = viewDrills();
     else if (r === 'progress') view = viewProgress();
     else if (r === 'profile') view = viewProfile();
@@ -997,7 +1360,9 @@ function render() {
   app.innerHTML = view.html;
   window.scrollTo(0, 0);
   renderedDay = today();
-  app.querySelectorAll('[data-back]').forEach((b) => { b.onclick = () => { location.hash = lastListPage; }; });
+  const r0 = parseHash().parts[0];
+  const backTo = r0 === 'story' ? '#/stories' : lastListPage;
+  app.querySelectorAll('[data-back]').forEach((b) => { b.onclick = () => { location.hash = backTo; }; });
   app.querySelectorAll('[data-bell]').forEach((b) => { b.onclick = () => toast('Жаңа хабарлама жоқ'); });
   view.mount?.();
 }

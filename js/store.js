@@ -34,7 +34,14 @@ export const state = {
   profile: null,
   completions: [], // { exercise_id, day, category, note }
   exercises: EXERCISES,
+  lessons: {},     // lesson_id -> { score, total }
+  questions: [],   // { id, text, category, created_at, answer, answered_at, mine }
 };
+
+function loadGuestExtras() {
+  state.lessons = LS.get('fp_lessons', {});
+  state.questions = LS.get('fp_questions', []);
+}
 
 export async function init() {
   state.mode = LS.get('fp_mode', null);
@@ -55,6 +62,7 @@ export async function init() {
   if (state.mode === 'guest') {
     state.profile = LS.get('fp_profile', null);
     state.completions = LS.get('fp_completions', []);
+    loadGuestExtras();
   }
   return state;
 }
@@ -65,7 +73,9 @@ async function migrateGuest() {
   const uid = state.user.id;
   const gProfile = LS.get('fp_profile', null);
   const gComps = LS.get('fp_completions', []);
-  if (!gProfile && !gComps.length) return;
+  const gLessons = LS.get('fp_lessons', {});
+  const gQuestions = LS.get('fp_questions', []);
+  if (!gProfile && !gComps.length && !Object.keys(gLessons).length && !gQuestions.length) return;
   try {
     if (!state.profile && gProfile) {
       const { data } = await sb.from('profiles').upsert({ id: uid, ...gProfile }).select().single();
@@ -80,21 +90,34 @@ async function migrateGuest() {
         if (data) state.completions = data;
       }
     }
-    LS.del('fp_profile');
-    LS.del('fp_completions');
+    for (const [lesson_id, r] of Object.entries(gLessons)) {
+      if (!state.lessons[lesson_id] || state.lessons[lesson_id].score < r.score) {
+        await sb.from('lesson_results').upsert({ user_id: uid, lesson_id, score: r.score, total: r.total });
+        state.lessons[lesson_id] = r;
+      }
+    }
+    for (const q of gQuestions) {
+      const { data } = await sb.from('questions').insert({ user_id: uid, text: q.text, category: q.category }).select().single();
+      if (data) state.questions.unshift({ ...data, mine: true });
+    }
+    ['fp_profile', 'fp_completions', 'fp_lessons', 'fp_questions'].forEach((k) => LS.del(k));
   } catch (e) { console.warn('Қонақ деректерін көшіру сәтсіз', e); }
 }
 
 async function loadCloud() {
   const sb = await getClient();
   const uid = state.user.id;
-  const [{ data: profile }, { data: comps }, { data: exs }] = await Promise.all([
+  const [{ data: profile }, { data: comps }, { data: exs }, { data: lessons }, { data: qs }] = await Promise.all([
     sb.from('profiles').select('*').eq('id', uid).maybeSingle(),
     sb.from('completions').select('exercise_id, day, category, note').eq('user_id', uid),
     sb.from('exercises').select('*'),
+    sb.from('lesson_results').select('lesson_id, score, total').eq('user_id', uid),
+    sb.from('questions').select('id, user_id, text, category, created_at, answer, answered_at').order('created_at', { ascending: false }),
   ]);
   state.profile = profile || null;
   state.completions = comps || [];
+  state.lessons = Object.fromEntries((lessons || []).map((l) => [l.lesson_id, { score: l.score, total: l.total }]));
+  state.questions = (qs || []).map((q) => ({ ...q, mine: q.user_id === uid }));
   if (exs && exs.length) {
     state.exercises = exs.map((e) => ({ ...e, positions: e.positions || undefined }));
   }
@@ -150,6 +173,7 @@ export function startGuest() {
   LS.set('fp_mode', 'guest');
   state.profile = LS.get('fp_profile', null);
   state.completions = LS.get('fp_completions', []);
+  loadGuestExtras();
 }
 
 export async function signOut() {
@@ -163,6 +187,8 @@ export async function signOut() {
   state.profile = null;
   state.completions = [];
   state.exercises = EXERCISES;
+  state.lessons = {};
+  state.questions = [];
 }
 
 export async function saveProfile(profile) {
@@ -203,4 +229,42 @@ export async function uncomplete(exercise, day) {
   }
   state.completions = state.completions.filter((c) => !(c.exercise_id === exercise.id && c.day === day));
   if (state.mode !== 'cloud') LS.set('fp_completions', state.completions);
+}
+
+// ───────── Позиция сабақтарының нәтижесі ─────────
+export async function saveLessonResult(lessonId, score, total) {
+  const prev = state.lessons[lessonId];
+  if (prev && prev.score >= score) return false;
+  if (state.mode === 'cloud') {
+    const sb = await getClient();
+    const { error } = await sb.from('lesson_results').upsert({ user_id: state.user.id, lesson_id: lessonId, score, total, updated_at: new Date().toISOString() });
+    if (error) throw error;
+  }
+  state.lessons = { ...state.lessons, [lessonId]: { score, total } };
+  if (state.mode !== 'cloud') LS.set('fp_lessons', state.lessons);
+  return true;
+}
+
+// ───────── Бапкерге сұрақ ─────────
+export async function askQuestion(text, category) {
+  const row = { text, category };
+  let saved;
+  if (state.mode === 'cloud') {
+    const sb = await getClient();
+    const { data, error } = await sb.from('questions').insert({ ...row, user_id: state.user.id }).select().single();
+    if (error) throw error;
+    saved = { ...data, mine: true };
+  } else {
+    saved = { ...row, id: `local-${Date.now()}`, created_at: new Date().toISOString(), answer: null, mine: true };
+  }
+  state.questions = [saved, ...state.questions];
+  if (state.mode !== 'cloud') LS.set('fp_questions', state.questions);
+  return saved;
+}
+
+export async function refreshQuestions() {
+  if (state.mode !== 'cloud') return;
+  const sb = await getClient();
+  const { data } = await sb.from('questions').select('id, user_id, text, category, created_at, answer, answered_at').order('created_at', { ascending: false });
+  if (data) state.questions = data.map((q) => ({ ...q, mine: q.user_id === state.user.id }));
 }

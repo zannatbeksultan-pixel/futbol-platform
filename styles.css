@@ -173,11 +173,12 @@ main.page.no-nav { padding-bottom: 32px; }
 /* ── Төменгі навигация ── */
 .nav {
   position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; z-index: 30;
-  height: var(--nav-h); display: grid; grid-template-columns: repeat(4, 1fr);
+  height: var(--nav-h); display: grid; grid-template-columns: repeat(5, 1fr);
   background: rgba(11, 15, 26, .95); backdrop-filter: blur(14px); border-top: 1px solid rgba(42, 53, 77, .6);
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
-.nav a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--muted); font: 700 10px var(--head); letter-spacing: .06em; text-transform: uppercase; }
+.nav a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--muted); font: 700 9px var(--head); letter-spacing: .03em; text-transform: uppercase; min-width: 0; }
+.nav a span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nav a.on { color: var(--green); }
 .nav a.on .ic { filter: drop-shadow(0 0 6px rgba(34, 229, 91, .7)); }
 
@@ -327,3 +328,33 @@ textarea.field { min-height: 110px; resize: vertical; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* ── Жаңа бөлімдер ── */
+.feature { display: flex; flex-direction: column; gap: 4px; padding: 16px; transition: border-color .2s; }
+.feature:hover { border-color: var(--c); }
+.feature .f-ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 6px; color: var(--c); background: color-mix(in srgb, var(--c) 15%, transparent); }
+.feature b { font: 700 15px/1.25 var(--head); }
+.feature small { color: var(--muted); font-size: 12px; line-height: 1.35; }
+.lesson-hero { display: block; border-color: rgba(34, 229, 91, .35); background: linear-gradient(160deg, #14301F, var(--card) 65%); }
+.lesson-hero .label { display: inline-flex; align-items: center; gap: 6px; }
+.drill .mini-bar { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--green); }
+.theory { display: flex; gap: 14px; align-items: flex-start; }
+.theory .n { width: 32px; height: 32px; border-radius: 50%; flex: none; display: grid; place-items: center; font: 800 14px var(--head); background: rgba(34, 229, 91, .15); color: var(--green); }
+.story-card { display: flex; align-items: center; gap: 14px; position: relative; overflow: hidden; }
+.story-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--c); }
+.s-avatar { width: 52px; height: 52px; border-radius: 50%; flex: none; display: grid; place-items: center; font: 800 17px var(--head); color: var(--bg); background: linear-gradient(135deg, color-mix(in srgb, var(--c) 70%, white), var(--c)); box-shadow: 0 0 18px -6px var(--c); }
+.s-avatar.lg { width: 80px; height: 80px; font-size: 28px; }
+.story-hero { min-height: 220px; }
+.story-block .sb-ic { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; color: var(--c); background: color-mix(in srgb, var(--c) 15%, transparent); }
+.path { display: flex; flex-direction: column; gap: 0; }
+.path-step { position: relative; display: flex; align-items: center; gap: 12px; padding: 6px 0 6px 2px; font: 600 14px var(--head); }
+.path-step i { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+.path-step + .path-step::before { content: ''; position: absolute; left: 7px; top: -6px; height: 12px; width: 2px; background: var(--border-2); }
+.faq { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.faq summary { list-style: none; cursor: pointer; padding: 14px 16px; display: flex; justify-content: space-between; gap: 12px; align-items: center; font: 700 14px/1.35 var(--head); }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary span { color: var(--muted); transition: transform .2s; flex: none; }
+.faq[open] summary span { transform: rotate(90deg); color: var(--green); }
+.faq p { margin: 0; padding: 0 16px 16px; color: var(--muted); line-height: 1.6; }
+.q-card .answer { margin-top: 12px; padding: 12px; border-radius: 12px; background: rgba(34, 229, 91, .07); border: 1px solid rgba(34, 229, 91, .25); }
+.quote-card small { line-height: 1.4; }
