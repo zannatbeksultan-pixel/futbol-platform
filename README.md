@@ -1,0 +1,55 @@
+# ⚽ Күнделікті футбол жаттықтырушысы
+
+Футболшыларға арналған веб-платформа (PWA). Ойыншы күн сайын 4 бөлімнен тұратын жоспар алады:
+
+| Бөлім | Не бар |
+|---|---|
+| **Тактика** | Анимацияланған алаң схемасы + «не істейсің?» тесті + бапкер түсіндірмесі |
+| **Физика** | Сет санағышы, белсенді таймер, демалыс таймері |
+| **Психология** | Тыныс алу жаттығуы (4-4-4-4), көңіл-күй, күнделік |
+| **Техника** | Қадамдық нұсқау, сет санағышы, таймер |
+
+Сонымен қатар: серия (streak), XP және деңгей, шеберлік картасы (radar), апталық белсенділік, жетістіктер, жаттығулар кітапханасы, профиль.
+
+Дизайн: «Kinetic Pitch» (қараңғы тема, неон-жасыл, Montserrat + Inter).
+
+## Технология
+
+- Таза HTML/CSS/JavaScript (ES-модульдер), құрастыру (build) қажет емес
+- **Supabase**: Auth (email + құпиясөз), Postgres (`profiles`, `exercises`, `completions`), Row Level Security
+- Тіркелмей де қолдануға болады — онда деректер `localStorage`-та сақталады
+
+## Құрылым
+
+```
+index.html          — кіру нүктесі
+styles.css          — дизайн жүйесі
+manifest.json, icon.svg — PWA
+js/app.js           — экрандар мен маршрутизатор
+js/data.js          — жаттығулар мазмұны (24 жаттығу)
+js/pitch.js         — тактикалық схеманы SVG-мен салу
+js/store.js         — деректер қабаты (Supabase / localStorage)
+js/icons.js         — иконкалар
+js/config.js        — Supabase URL және publishable кілт
+supabase/migrations — дерекқор құрылымы
+supabase/seed.sql   — жаттығуларды базаға жүктеу
+```
+
+## Жергілікті іске қосу
+
+```bash
+python3 -m http.server 8000
+# http://localhost:8000 ашыңыз
+```
+
+## Жариялау
+
+**GitHub Pages:** Settings → Pages → Branch: `main`, folder: `/ (root)`.
+**Vercel / Netlify:** репозиторийді қосыңыз, build command бос, output — түбір папка.
+
+Жариялағаннан кейін Supabase-те **Authentication → URL Configuration → Site URL** өрісіне сайт мекенжайын жазыңыз (растау хатындағы сілтеме сол жерге апарады).
+
+## Жаңа жаттығу қосу
+
+1. `js/data.js` ішіне жаңа объект қосыңыз (тактика үшін `payload.players`, `arrows`, `quiz`).
+2. `node scripts/gen-seed.mjs > supabase/seed.sql` орындап, SQL-ді Supabase-те іске қосыңыз.
