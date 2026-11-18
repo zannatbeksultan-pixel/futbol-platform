@@ -28,7 +28,7 @@ const LS = {
 
 function toast(text) {
   let t = document.querySelector('.toast');
-  if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); }
+  if (!t) { t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.setAttribute('aria-live', 'polite'); document.body.appendChild(t); }
   t.textContent = text;
   t.classList.add('show');
   clearTimeout(t._h);
@@ -123,8 +123,8 @@ function nav(active) {
     ['progress', '#/progress', 'chart', 'Прогресс'],
     ['profile', '#/profile', 'user', 'Профиль'],
   ];
-  return `<nav class="nav">${items.map(([id, href, ic, label]) =>
-    `<a href="${href}" class="${active === id ? 'on' : ''}">${icon(ic, { size: 22 })}<span>${label}</span></a>`).join('')}</nav>`;
+  return `<nav class="nav" aria-label="Негізгі мәзір">${items.map(([id, href, ic, label]) =>
+    `<a href="${href}" class="${active === id ? 'on' : ''}"${active === id ? ' aria-current="page"' : ''}>${icon(ic, { size: 22 })}<span>${label}</span></a>`).join('')}</nav>`;
 }
 
 function ring(value, total, { size = 112, stroke = 10, color = 'var(--green)', track = '#1E2638', label = '', sub = '' } = {}) {
@@ -344,12 +344,12 @@ function viewTactics(ex, day) {
     <section class="pitch-card">
       <div class="row between" style="padding:2px 4px 8px">
         <span class="chip gray" style="text-transform:none;letter-spacing:0">${icon('eye', { size: 14 })} Біз жоғары қарай шабуылдаймыз</span>
-        <button class="icon-btn" data-replay aria-label="Қайта көрсету" style="width:36px;height:36px">${icon('refresh', { size: 18 })}</button>
+        <button class="icon-btn" data-replay aria-label="Схеманы қайта көрсету">${icon('refresh', { size: 18 })}</button>
       </div>
       <div data-pitch>${renderPitch(p, { uid: ex.id })}</div>
       <div class="legend">
         <span><i style="background:#22E55B"></i>Біздің команда</span>
-        <span><i style="background:#F43F5E"></i>Қарсылас</span>
+        <span><i style="background:#E11D48"></i>Қарсылас</span>
         <span><i style="background:transparent;border:2px solid #FDE047"></i>Назардағы ойыншы</span>
         ${LEGEND.filter((l) => (p.arrows || []).some((a) => a.k === l.k)).map((l) =>
           `<span><em style="border-color:${l.color};${l.dashed ? 'border-top-style:dashed' : ''}"></em>${l.label}</span>`).join('')}
@@ -368,7 +368,7 @@ function viewTactics(ex, day) {
         ${q.options.map((o, i) => `<button class="opt" data-opt="${i}"><span class="radio"></span><span><span class="tag" hidden></span>${esc(o)}</span></button>`).join('')}
       </div>
     </section>
-    <div data-feedback></div>
+    <div data-feedback aria-live="polite"></div>
     <div data-actions>
       ${isDone ? `<a class="btn btn-secondary" href="#/">${icon('home', { size: 20 })} Басты бетке</a>` : ''}
     </div>
@@ -382,7 +382,7 @@ function viewTactics(ex, day) {
         b.disabled = true;
         const tag = b.querySelector('.tag');
         if (j === q.answer) { b.classList.add('right'); b.querySelector('.radio').innerHTML = icon('check', { size: 14 }); tag.hidden = false; tag.textContent = 'Дұрыс бағыт'; tag.style.color = 'var(--green)'; }
-        else if (j === i) { b.classList.add('wrong'); b.querySelector('.radio').innerHTML = '✕'; tag.hidden = false; tag.textContent = 'Сіздің жауабыңыз'; tag.style.color = 'var(--red)'; }
+        else if (j === i) { b.classList.add('wrong'); b.querySelector('.radio').innerHTML = '✕'; tag.hidden = false; tag.textContent = 'Сіздің жауабыңыз'; tag.style.color = 'var(--red-text)'; }
       });
       const ok = i === q.answer;
       if (!silent) { const log = quizLog(); log[ex.id] = ok; LS.set('fp_quiz', log); }
@@ -518,10 +518,10 @@ function viewWorkout(ex, day) {
 
 // — Психология —
 const MOODS = [
-  ['⚡', 'Сенімді', 'Күшке толы'],
-  ['🔥', 'Ынталы', 'Жеңіске құштар'],
-  ['🧘', 'Салмақты', 'Зейін толық'],
-  ['🌪️', 'Толқу бар', 'Бақылауда'],
+  ['bolt', 'Сенімді', 'Күшке толы'],
+  ['flame', 'Ынталы', 'Жеңіске құштар'],
+  ['wind', 'Салмақты', 'Зейін толық'],
+  ['heart', 'Толқу бар', 'Бақылауда'],
 ];
 
 function viewMental(ex, day) {
@@ -560,8 +560,8 @@ function viewMental(ex, day) {
 
     <section class="stack">
       <div class="section-title"><h3 class="h-md">${icon('edit', { size: 20, cls: 'green' })} Жаттығушы күнделігі</h3><span class="chip">Бүгін</span></div>
-      <div class="label muted" style="text-transform:none;letter-spacing:0;font-size:14px">Бүгінгі көңіл-күйің:</div>
-      <div class="mood-grid">${MOODS.map(([e, t, s], i) => `<button class="mood" data-mood="${i}"><span class="e">${e}</span><span><b>${t}</b><small>${s}</small></span></button>`).join('')}</div>
+      <div class="label muted" id="mood-label" style="text-transform:none;letter-spacing:0;font-size:14px">Бүгінгі көңіл-күйің:</div>
+      <div class="mood-grid" role="group" aria-labelledby="mood-label">${MOODS.map(([ic, t, s], i) => `<button class="mood" data-mood="${i}" aria-pressed="false"><span class="e">${icon(ic, { size: 20 })}</span><span><b>${t}</b><small>${s}</small></span></button>`).join('')}</div>
       <label class="field-label" for="journal" style="margin-top:6px">${esc(p.journal || 'Бүгінгі ойың:')}</label>
       <textarea id="journal" class="field" maxlength="500" placeholder="Мысалы: Бүгін маңызды матч, аздап толқу бар, бірақ дайындығым жоғары...">${esc(existing.replace(/^\[.*?\]\s*/, ''))}</textarea>
       <div class="row between dim" style="font-size:12px"><span class="row" style="gap:4px">${icon('lock', { size: 12 })} Жеке жазба</span><span data-count>0 / 500</span></div>
@@ -579,8 +579,11 @@ function viewMental(ex, day) {
     let mood = null;
     const moodMatch = existing.match(/^\[(.*?)\]/);
     app.querySelectorAll('[data-mood]').forEach((b) => {
-      if (moodMatch && MOODS[b.dataset.mood][1] === moodMatch[1]) { b.classList.add('on'); mood = Number(b.dataset.mood); }
-      b.onclick = () => { app.querySelectorAll('[data-mood]').forEach((x) => x.classList.remove('on')); b.classList.add('on'); mood = Number(b.dataset.mood); };
+      if (moodMatch && MOODS[b.dataset.mood][1] === moodMatch[1]) { b.classList.add('on'); b.setAttribute('aria-pressed', 'true'); mood = Number(b.dataset.mood); }
+      b.onclick = () => {
+        app.querySelectorAll('[data-mood]').forEach((x) => { x.classList.remove('on'); x.setAttribute('aria-pressed', 'false'); });
+        b.classList.add('on'); b.setAttribute('aria-pressed', 'true'); mood = Number(b.dataset.mood);
+      };
     });
     const ta = app.querySelector('#journal');
     const cnt = app.querySelector('[data-count]');
@@ -737,7 +740,7 @@ function viewProgress() {
       <div class="row" style="gap:14px">
         <div style="position:relative">
           <div class="avatar lg">${esc(initials(p.name))}</div>
-          <span class="chip" style="position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);height:22px;padding:0 8px;font-size:10px;background:var(--green);color:var(--bg)">LVL ${lvl}</span>
+          <span class="chip" style="position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);min-height:22px;padding:0 8px;font-size:12px;background:var(--green);color:var(--bg)">LVL ${lvl}</span>
         </div>
         <div style="min-width:0">
           <div class="h-md" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.name || 'Ойыншы')}</div>
@@ -747,7 +750,7 @@ function viewProgress() {
       </div>
       <div class="row between" style="margin:16px 0 8px;font:700 13px var(--head)"><span class="row" style="gap:6px">${icon('trend', { size: 16, cls: 'green' })} Тәжірибе ұпайы</span><span class="green tnum">${into} / ${need} XP</span></div>
       <div class="bar" style="height:10px"><i style="width:${(into / need) * 100}%;background:var(--green);box-shadow:var(--glow-green)"></i></div>
-      <div class="row between dim" style="margin-top:8px;font:700 11px var(--head);letter-spacing:.04em;text-transform:uppercase"><span>Келесі деңгейге: ${need - into} XP</span><span class="green">Барлығы ${xp} XP</span></div>
+      <div class="row between dim" style="margin-top:8px;font:700 12px var(--head);letter-spacing:.04em;text-transform:uppercase"><span>Келесі деңгейге: ${need - into} XP</span><span class="green">Барлығы ${xp} XP</span></div>
     </section>
 
     <section class="card lg">
@@ -820,13 +823,13 @@ function viewProgress() {
 
 // — Профиль формасы —
 function profileForm(p = {}) {
-  const choice = (name, map, val) => `<div class="choice-grid">${Object.entries(map).map(([k, v]) =>
-    `<button type="button" class="choice ${val === k ? 'on' : ''}" data-choice="${name}" data-v="${k}">${v}</button>`).join('')}</div>`;
+  const choice = (name, map, val) => `<div class="choice-grid" role="group" aria-labelledby="lbl-${name}">${Object.entries(map).map(([k, v]) =>
+    `<button type="button" class="choice ${val === k ? 'on' : ''}" data-choice="${name}" data-v="${k}" aria-pressed="${val === k}">${v}</button>`).join('')}</div>`;
   return `
     <div><label class="field-label" for="pf-name">Атың</label><input id="pf-name" class="field" maxlength="40" placeholder="Мысалы: Әлихан" value="${esc(p.name || '')}"/></div>
-    <div><span class="field-label">Жасың</span>${choice('age_group', AGE_GROUPS, p.age_group)}</div>
-    <div><span class="field-label">Позицияң</span>${choice('position', POSITIONS, p.position)}</div>
-    <div><span class="field-label">Деңгейің</span>${choice('level', LEVELS, p.level)}</div>`;
+    <div><span class="field-label" id="lbl-age_group">Жасың</span>${choice('age_group', AGE_GROUPS, p.age_group)}</div>
+    <div><span class="field-label" id="lbl-position">Позицияң</span>${choice('position', POSITIONS, p.position)}</div>
+    <div><span class="field-label" id="lbl-level">Деңгейің</span>${choice('level', LEVELS, p.level)}</div>`;
 }
 
 function bindProfileForm(initial, onSubmit, btnSel) {
@@ -836,8 +839,8 @@ function bindProfileForm(initial, onSubmit, btnSel) {
   const check = () => { btn.disabled = !(nameEl.value.trim() && vals.age_group && vals.position && vals.level); };
   app.querySelectorAll('[data-choice]').forEach((b) => {
     b.onclick = () => {
-      app.querySelectorAll(`[data-choice="${b.dataset.choice}"]`).forEach((x) => x.classList.remove('on'));
-      b.classList.add('on');
+      app.querySelectorAll(`[data-choice="${b.dataset.choice}"]`).forEach((x) => { x.classList.remove('on'); x.setAttribute('aria-pressed', 'false'); });
+      b.classList.add('on'); b.setAttribute('aria-pressed', 'true');
       vals[b.dataset.choice] = b.dataset.v;
       check();
     };
@@ -921,9 +924,12 @@ function viewAuth() {
       ${CATEGORY_ORDER.map((c) => `<div class="card row" style="gap:10px;padding:12px;--c:${CATEGORIES[c].color}"><span style="color:${CATEGORIES[c].color}">${icon(CATEGORY_ICON[c], { size: 20 })}</span><b style="font:700 14px var(--head)">${CATEGORIES[c].name}</b></div>`).join('')}
     </div>
     <div class="stack">
-      <input class="field" id="au-email" type="email" autocomplete="email" placeholder="Электрондық пошта"/>
-      <input class="field" id="au-pass" type="password" autocomplete="current-password" placeholder="Құпиясөз (кемінде 6 таңба)"/>
-      <div data-msg></div>
+      <div><label class="field-label" for="au-email">Электрондық пошта</label>
+      <input class="field" id="au-email" type="email" inputmode="email" autocomplete="email" placeholder="name@mail.kz"/></div>
+      <div><label class="field-label" for="au-pass">Құпиясөз</label>
+      <input class="field" id="au-pass" type="password" autocomplete="current-password" aria-describedby="au-pass-hint" placeholder="••••••"/>
+      <small id="au-pass-hint" class="dim" style="display:block;margin-top:6px;font-size:13px">Кемінде 6 таңба</small></div>
+      <div data-msg role="status" aria-live="polite"></div>
       <div class="btn-row">
         <button class="btn btn-primary" data-in>Кіру</button>
         <button class="btn btn-secondary" data-up>Тіркелу</button>
@@ -1095,7 +1101,7 @@ function viewLesson(id) {
             <div data-pitch>${renderPitch(q.scheme, { uid: `${lesson.id}-${st.step}` })}</div>
             <div class="legend">
               <span><i style="background:#22E55B"></i>Біздің команда</span>
-              <span><i style="background:#F43F5E"></i>Қарсылас</span>
+              <span><i style="background:#E11D48"></i>Қарсылас</span>
               <span><i style="background:transparent;border:2px solid #FDE047"></i>Сен</span>
               ${LEGEND.filter((l) => (q.scheme.arrows || []).some((a) => a.k === l.k)).map((l) =>
                 `<span><em style="border-color:${l.color};${l.dashed ? 'border-top-style:dashed' : ''}"></em>${l.label}</span>`).join('')}
@@ -1106,7 +1112,7 @@ function viewLesson(id) {
             <h3 class="h-md" style="margin-bottom:14px">${esc(q.question)}</h3>
             <div class="stack">${q.options.map((o, i) => `<button class="opt" data-opt="${i}"><span class="radio"></span><span><span class="tag" hidden></span>${esc(o)}</span></button>`).join('')}</div>
           </section>
-          <div data-feedback></div>
+          <div data-feedback aria-live="polite"></div>
           <div data-actions></div>`;
         const opts = [...root.querySelectorAll('[data-opt]')];
         const reveal = (i) => {
@@ -1114,7 +1120,7 @@ function viewLesson(id) {
             b.disabled = true;
             const tag = b.querySelector('.tag');
             if (j === q.answer) { b.classList.add('right'); b.querySelector('.radio').innerHTML = icon('check', { size: 14 }); tag.hidden = false; tag.textContent = 'Дұрыс жауап'; tag.style.color = 'var(--green)'; }
-            else if (j === i) { b.classList.add('wrong'); b.querySelector('.radio').innerHTML = '✕'; tag.hidden = false; tag.textContent = 'Сенің жауабың'; tag.style.color = 'var(--red)'; }
+            else if (j === i) { b.classList.add('wrong'); b.querySelector('.radio').innerHTML = '✕'; tag.hidden = false; tag.textContent = 'Сенің жауабың'; tag.style.color = 'var(--red-text)'; }
           });
           const ok = i === q.answer;
           root.querySelector('[data-feedback]').innerHTML = `<section class="feedback ${ok ? '' : 'bad'}">
@@ -1258,11 +1264,12 @@ function viewAsk() {
     </section>
 
     <section class="card lg stack">
-      <span class="field-label" style="margin:0">Тақырып</span>
-      <div class="filters" style="flex-wrap:wrap">${Object.entries(Q_CATS).map(([k, v]) => `<button class="filter ${askCat === k ? 'on' : ''}" data-c="${k}">${v}</button>`).join('')}</div>
+      <span class="field-label" style="margin:0" id="ask-cat-label">Тақырып</span>
+      <div class="filters" style="flex-wrap:wrap" role="group" aria-labelledby="ask-cat-label">${Object.entries(Q_CATS).map(([k, v]) => `<button class="filter ${askCat === k ? 'on' : ''}" data-c="${k}">${v}</button>`).join('')}</div>
+      <label class="field-label" for="ask-text" style="margin:0">Сұрағың</label>
       <textarea id="ask-text" class="field" maxlength="600" placeholder="Мысалы: Қорғаушы ретінде жылдам шабуылшыға қарсы қалай ойнаймын?"></textarea>
       <div class="row between dim" style="font-size:12px"><span>${guest ? `${icon('info', { size: 12 })} Қонақ режимінде сұрақ тек осы құрылғыда сақталады` : `${icon('lock', { size: 12 })} Сұрағыңды тек сен және бапкер көреді`}</span><span data-count>0 / 600</span></div>
-      <div data-suggest></div>
+      <div data-suggest aria-live="polite"></div>
       <button class="btn btn-primary" data-send disabled>${icon('send', { size: 18 })} Сұрақты жіберу</button>
     </section>
 
@@ -1290,7 +1297,7 @@ function viewAsk() {
     const sug = app.querySelector('[data-suggest]');
     const cnt = app.querySelector('[data-count]');
     app.querySelectorAll('[data-c]').forEach((b) => {
-      b.onclick = () => { askCat = b.dataset.c; app.querySelectorAll('[data-c]').forEach((x) => x.classList.toggle('on', x === b)); };
+      b.onclick = () => { askCat = b.dataset.c; app.querySelectorAll('[data-c]').forEach((x) => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', String(x === b)); }); };
     });
     let h;
     ta.oninput = () => {
@@ -1360,6 +1367,9 @@ function render() {
   app.innerHTML = view.html;
   window.scrollTo(0, 0);
   renderedDay = today();
+  const main = app.querySelector('main');
+  if (main) { main.id = 'main'; main.tabIndex = -1; }
+  app.querySelectorAll('.filter').forEach((f) => f.setAttribute('aria-pressed', String(f.classList.contains('on'))));
   const r0 = parseHash().parts[0];
   const backTo = r0 === 'story' ? '#/stories' : lastListPage;
   app.querySelectorAll('[data-back]').forEach((b) => { b.onclick = () => { location.hash = backTo; }; });
@@ -1368,6 +1378,7 @@ function render() {
 }
 
 window.addEventListener('hashchange', render);
+document.querySelector('.skip-link')?.addEventListener('click', () => app.querySelector('main')?.focus());
 
 // Түн ортасынан кейін немесе қосымшаға қайта оралғанда күндік жоспарды жаңарту
 let renderedDay = today();

@@ -76,7 +76,7 @@ export function renderPitch(payload, { uid = 'p' } = {}) {
   }).join('');
 
   const playerEls = players.map((p) => {
-    const fill = p.t === 'a' ? '#22E55B' : '#F43F5E';
+    const fill = p.t === 'a' ? '#22E55B' : '#E11D48';
     const text = p.t === 'a' ? '#06240F' : '#FFFFFF';
     const ring = p.hl
       ? `<circle cx="${p.x}" cy="${p.y}" r="3.2" fill="none" stroke="#FDE047" stroke-width=".5" class="pitch-pulse"/>`
