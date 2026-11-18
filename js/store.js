@@ -45,6 +45,7 @@ export async function init() {
       if (data?.session?.user) {
         state.user = data.session.user;
         await loadCloud();
+        await migrateGuest();
         return state;
       }
     }
@@ -56,6 +57,32 @@ export async function init() {
     state.completions = LS.get('fp_completions', []);
   }
   return state;
+}
+
+// Қонақ режимінде жиналған прогресті жаңа аккаунтқа көшіру
+async function migrateGuest() {
+  const sb = await getClient();
+  const uid = state.user.id;
+  const gProfile = LS.get('fp_profile', null);
+  const gComps = LS.get('fp_completions', []);
+  if (!gProfile && !gComps.length) return;
+  try {
+    if (!state.profile && gProfile) {
+      const { data } = await sb.from('profiles').upsert({ id: uid, ...gProfile }).select().single();
+      if (data) state.profile = data;
+    }
+    const known = new Set(state.exercises.map((e) => e.id));
+    const rows = gComps.filter((c) => known.has(c.exercise_id)).map((c) => ({ ...c, user_id: uid }));
+    if (rows.length) {
+      const { error } = await sb.from('completions').upsert(rows, { onConflict: 'user_id,exercise_id,day', ignoreDuplicates: true });
+      if (!error) {
+        const { data } = await sb.from('completions').select('exercise_id, day, category, note').eq('user_id', uid);
+        if (data) state.completions = data;
+      }
+    }
+    LS.del('fp_profile');
+    LS.del('fp_completions');
+  } catch (e) { console.warn('Қонақ деректерін көшіру сәтсіз', e); }
 }
 
 async function loadCloud() {
@@ -102,6 +129,7 @@ export async function signUp(email, password) {
   state.mode = 'cloud';
   LS.set('fp_mode', 'cloud');
   await loadCloud();
+  await migrateGuest();
   return { needsConfirm: false };
 }
 
@@ -114,6 +142,7 @@ export async function signIn(email, password) {
   state.mode = 'cloud';
   LS.set('fp_mode', 'cloud');
   await loadCloud();
+  await migrateGuest();
 }
 
 export function startGuest() {

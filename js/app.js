@@ -281,7 +281,11 @@ function nextAfter(ex, day) {
   return plan.find((e) => e.id !== ex.id && !store.isDone(e.id, day));
 }
 
+let finishing = false;
 async function finish(ex, day, note) {
+  if (finishing) return;
+  finishing = true;
+  app.querySelectorAll('[data-finish],[data-act="finish"],[data-save]').forEach((b) => { b.disabled = true; });
   try {
     await store.complete(ex, day, note);
     toast(`+${XP_PER} XP — ${CATEGORIES[ex.category].name} аяқталды!`);
@@ -290,6 +294,9 @@ async function finish(ex, day, note) {
   } catch (e) {
     toast('Сақтау сәтсіз болды. Қайта көріңіз.');
     console.error(e);
+    app.querySelectorAll('[data-finish],[data-act="finish"],[data-save]').forEach((b) => { b.disabled = false; });
+  } finally {
+    finishing = false;
   }
 }
 
@@ -455,6 +462,7 @@ function viewWorkout(ex, day) {
     };
 
     const act = (a) => {
+      acc = 0; last = Date.now();
       if (a === 'start') { st.phase = 'work'; st.elapsed = 0; st.paused = false; }
       if (a === 'set') { st.setsDone++; st.paused = false; if (st.setsDone >= sets) st.phase = 'done'; else { st.phase = 'rest'; st.rest = p.rest_sec; } }
       if (a === 'skip') { st.phase = 'work'; st.elapsed = 0; }
@@ -463,18 +471,27 @@ function viewWorkout(ex, day) {
       draw();
     };
 
+    let last = Date.now();
+    let acc = 0;
     const h = setInterval(() => {
+      const now = Date.now();
+      acc += (now - last) / 1000;
+      last = now;
+      const secs = Math.floor(acc);
+      if (!secs) return;
+      acc -= secs;
       if (st.paused) return;
-      if (st.phase === 'work') {
-        st.elapsed++;
-        if (p.work_sec && st.elapsed >= p.work_sec) { act('set'); return; }
-        draw();
-      } else if (st.phase === 'rest') {
-        st.rest--;
-        if (st.rest <= 0) { st.phase = 'work'; st.elapsed = 0; if (navigator.vibrate) navigator.vibrate(200); }
-        draw();
+      for (let i = 0; i < secs; i++) {
+        if (st.phase === 'work') {
+          st.elapsed++;
+          if (p.work_sec && st.elapsed >= p.work_sec) { act('set'); return; }
+        } else if (st.phase === 'rest') {
+          st.rest--;
+          if (st.rest <= 0) { st.phase = 'work'; st.elapsed = 0; try { navigator.vibrate?.(200); } catch { /* */ } }
+        }
       }
-    }, 1000);
+      if (st.phase === 'work' || st.phase === 'rest') draw();
+    }, 250);
     onLeave(() => clearInterval(h));
     draw();
   };
@@ -933,6 +950,9 @@ function viewAuth() {
       } catch (e) { show(authError(e), true); busy(false); }
     };
     app.querySelector('[data-guest]').onclick = () => { store.startGuest(); render(); };
+    [email, pass].forEach((el) => el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !app.querySelector('[data-in]').disabled) app.querySelector('[data-in]').click();
+    }));
   };
   return { html, mount };
 }
@@ -954,6 +974,9 @@ function parseHash() {
   return { parts: path.split('/').filter(Boolean), params };
 }
 
+// «Артқа» батырмасы соңғы ашылған тізім бетіне (басты, жаттығулар, т.б.) қайтарады
+let lastListPage = '#/';
+
 function render() {
   cleanups.forEach((f) => f());
   cleanups = [];
@@ -963,6 +986,7 @@ function render() {
   else {
     const { parts, params } = parseHash();
     const [r, id] = parts;
+    if (r !== 'ex') lastListPage = `#/${r || ''}`;
     if (r === 'ex' && id) view = viewExercise(id, params.get('d') || today());
     else if (r === 'drills') view = viewDrills();
     else if (r === 'progress') view = viewProgress();
@@ -972,12 +996,19 @@ function render() {
   if (typeof view === 'string') view = { html: view };
   app.innerHTML = view.html;
   window.scrollTo(0, 0);
-  app.querySelectorAll('[data-back]').forEach((b) => { b.onclick = () => { if (history.length > 1) history.back(); else location.hash = '#/'; }; });
+  renderedDay = today();
+  app.querySelectorAll('[data-back]').forEach((b) => { b.onclick = () => { location.hash = lastListPage; }; });
   app.querySelectorAll('[data-bell]').forEach((b) => { b.onclick = () => toast('Жаңа хабарлама жоқ'); });
   view.mount?.();
 }
 
 window.addEventListener('hashchange', render);
+
+// Түн ортасынан кейін немесе қосымшаға қайта оралғанда күндік жоспарды жаңарту
+let renderedDay = today();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && today() !== renderedDay) render();
+});
 
 (async function boot() {
   app.innerHTML = `<div class="loader">${icon('ball', { size: 44, cls: 'spin' })}</div>`;
