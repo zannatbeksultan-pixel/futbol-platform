@@ -909,6 +909,14 @@ function viewAuth() {
       return true;
     };
     const busy = (b) => app.querySelectorAll('[data-in],[data-up],[data-guest]').forEach((x) => { x.disabled = b; });
+    const lock = (b) => app.querySelectorAll('[data-in],[data-up],#au-email,#au-pass').forEach((x) => { x.disabled = b; });
+    lock(true);
+    show('Серверге қосылуды тексеру...');
+    store.cloudAvailable().then((ok) => {
+      if (!app.contains(msg)) return;
+      if (ok) { lock(false); show(''); return; }
+      show('Серверге қосылу мүмкін емес. Алдын ала көру режимінде (claude.ai ішінде) сыртқы серверге қосылуға тыйым салынған, ал нағыз сайтта бұл жұмыс істейді. Әзірге «Тіркелмей бастау» батырмасын басыңыз.', true);
+    });
     app.querySelector('[data-in]').onclick = async () => {
       if (!valid()) return;
       busy(true); show('Кіру...');

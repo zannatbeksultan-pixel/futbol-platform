@@ -73,8 +73,22 @@ async function loadCloud() {
   }
 }
 
-export async function cloudAvailable() {
-  return !!(await getClient());
+let probe = null;
+// Сервер шынымен қолжетімді ме? (кітапхана жүктелді және Supabase жауап береді)
+export function cloudAvailable() {
+  if (!probe) {
+    probe = (async () => {
+      if (!(await getClient())) return false;
+      try {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 6000);
+        const r = await fetch(`${SUPABASE_URL}/auth/v1/health`, { headers: { apikey: SUPABASE_KEY }, signal: ctrl.signal });
+        clearTimeout(t);
+        return r.ok;
+      } catch { return false; }
+    })();
+  }
+  return probe;
 }
 
 export async function signUp(email, password) {
