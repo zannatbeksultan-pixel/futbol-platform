@@ -2,7 +2,7 @@
 const W = 68;
 const H = 105;
 
-const ARROW_COLORS = { run: '#F2EFE6', pass: '#8AB4FF', drib: '#FF8C7E' };
+const ARROW_COLORS = { run: '#F3F5EE', pass: '#7FB2FF', drib: '#FF8A7A' };
 
 function lines() {
   const s = 'stroke="rgba(255,255,255,.55)" stroke-width=".35" fill="none"';
@@ -76,10 +76,10 @@ export function renderPitch(payload, { uid = 'p' } = {}) {
   }).join('');
 
   const playerEls = players.map((p) => {
-    const fill = p.t === 'a' ? '#FFC93C' : '#E5483A';
-    const text = p.t === 'a' ? '#16261D' : '#FFFFFF';
+    const fill = p.t === 'a' ? '#FFB21A' : '#FF5D50';
+    const text = p.t === 'a' ? '#0A1324' : '#FFFFFF';
     const ring = p.hl
-      ? `<circle cx="${p.x}" cy="${p.y}" r="3.2" fill="none" stroke="#F2EFE6" stroke-width=".5" class="pitch-pulse"/>`
+      ? `<circle cx="${p.x}" cy="${p.y}" r="3.2" fill="none" stroke="#F3F5EE" stroke-width=".5" class="pitch-pulse"/>`
       : '';
     return `<g class="pitch-player">${ring}
       <circle cx="${p.x}" cy="${p.y + 0.35}" r="2.3" fill="rgba(0,0,0,.35)"/>
@@ -96,7 +96,7 @@ export function renderPitch(payload, { uid = 'p' } = {}) {
   return `<svg class="pitch" viewBox="-1 -2 ${W + 2} ${H + 4}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Тактикалық схема">
     <defs>
       <linearGradient id="${uid}-grass" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#145240"/><stop offset="1" stop-color="#0E4031"/>
+        <stop offset="0" stop-color="#12573B"/><stop offset="1" stop-color="#0C4430"/>
       </linearGradient>
       ${markers}
     </defs>

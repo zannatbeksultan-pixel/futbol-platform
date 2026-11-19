@@ -4,10 +4,10 @@
 // Жебелер: k: 'run' — жүгіріс, 'pass' — пас, 'drib' — доп жүргізу.
 
 export const CATEGORIES = {
-  tactics:   { id: 'tactics',   name: 'Тактика',    icon: '⚽', color: '#FFC93C', tagline: 'Ойынды оқу' },
-  physical:  { id: 'physical',  name: 'Физика',     icon: '💪', color: '#FF8C7E', tagline: 'Жылдамдық пен күш' },
-  mental:    { id: 'mental',    name: 'Психология', icon: '🧠', color: '#8AB4FF', tagline: 'Сенім мен зейін' },
-  technique: { id: 'technique', name: 'Техника',    icon: '🎯', color: '#F2EFE6', tagline: 'Доппен жұмыс' },
+  tactics:   { id: 'tactics',   name: 'Тактика',    icon: '⚽', color: '#FFB21A', tagline: 'Ойынды оқу' },
+  physical:  { id: 'physical',  name: 'Физика',     icon: '💪', color: '#FF8A7A', tagline: 'Жылдамдық пен күш' },
+  mental:    { id: 'mental',    name: 'Психология', icon: '🧠', color: '#7FB2FF', tagline: 'Сенім мен зейін' },
+  technique: { id: 'technique', name: 'Техника',    icon: '🎯', color: '#3DDC8C', tagline: 'Доппен жұмыс' },
 };
 
 export const CATEGORY_ORDER = ['tactics', 'physical', 'mental', 'technique'];

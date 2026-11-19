@@ -56,6 +56,19 @@ function animateNumbers(root) {
   });
 }
 
+function confetti() {
+  if (reducedMotion()) return;
+  const colors = ['#FFB21A', '#3DDC8C', '#7FB2FF', '#FF8A7A', '#F3F5EE'];
+  const box = document.createElement('div');
+  box.className = 'confetti'; box.setAttribute('aria-hidden', 'true');
+  box.innerHTML = Array.from({ length: 70 }, () => {
+    const x = Math.random() * 100, dx = (Math.random() - .5) * 200, r = Math.random() * 900 - 450;
+    return `<i style="left:${x}vw;background:${colors[Math.floor(Math.random() * colors.length)]};--x:${dx}px;--r:${r}deg;--t:${(1.6 + Math.random() * 1.4).toFixed(2)}s;--d:${(Math.random() * .35).toFixed(2)}s"></i>`;
+  }).join('');
+  document.body.appendChild(box);
+  setTimeout(() => box.remove(), 3600);
+}
+
 function toast(text, kind) {
   let t = document.querySelector('.toast');
   if (!t) { t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.setAttribute('aria-live', 'polite'); document.body.appendChild(t); }
@@ -159,7 +172,7 @@ function nav(active) {
     `<a href="${href}" class="${active === id ? 'on' : ''}"${active === id ? ' aria-current="page"' : ''}>${icon(ic, { size: 22 })}<span>${label}</span></a>`).join('')}</nav>`;
 }
 
-function ring(value, total, { size = 112, stroke = 10, color = 'var(--green)', track = '#0A2B21', label = '', sub = '' } = {}) {
+function ring(value, total, { size = 112, stroke = 10, color = 'var(--green)', track = '#070F1D', label = '', sub = '' } = {}) {
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const pct = total ? Math.min(1, value / total) : 0;
@@ -339,6 +352,7 @@ async function finish(ex, day, note) {
   try {
     await store.complete(ex, day, note);
     toast(`+${XP_PER} XP — ${CATEGORIES[ex.category].name} аяқталды!`, 'win');
+    confetti();
     const nx = nextAfter(ex, day);
     location.hash = nx && day === today() ? `#/ex/${nx.id}?d=${day}` : '#/';
   } catch (e) {
@@ -380,9 +394,9 @@ function viewTactics(ex, day) {
       </div>
       <div data-pitch>${renderPitch(p, { uid: ex.id })}</div>
       <div class="legend">
-        <span><i style="background:#FFC93C"></i>Біздің команда</span>
-        <span><i style="background:#E5483A"></i>Қарсылас</span>
-        <span><i style="background:transparent;border:2px solid #F2EFE6"></i>Назардағы ойыншы</span>
+        <span><i style="background:#FFB21A"></i>Біздің команда</span>
+        <span><i style="background:#FF5D50"></i>Қарсылас</span>
+        <span><i style="background:transparent;border:2px solid #F3F5EE"></i>Назардағы ойыншы</span>
         ${LEGEND.filter((l) => (p.arrows || []).some((a) => a.k === l.k)).map((l) =>
           `<span><em style="border-color:${l.color};${l.dashed ? 'border-top-style:dashed' : ''}"></em>${l.label}</span>`).join('')}
       </div>
@@ -718,14 +732,14 @@ function radar(scores) {
     ['physical', 0, 1, 'Физика', 'middle', 20],
     ['technique', -1, 0, 'Техника', 'end', 4],
   ];
-  const grid = [0.25, 0.5, 0.75, 1].map((k) => `<polygon points="${axes.map(([, x, y]) => `${cx + x * R * k},${cy + y * R * k}`).join(' ')}" fill="none" stroke="rgba(242,239,230,.22)" stroke-dasharray="3 3"/>`).join('');
+  const grid = [0.25, 0.5, 0.75, 1].map((k) => `<polygon points="${axes.map(([, x, y]) => `${cx + x * R * k},${cy + y * R * k}`).join(' ')}" fill="none" stroke="rgba(243,245,238,.22)" stroke-dasharray="3 3"/>`).join('');
   const pts = axes.map(([c, x, y]) => { const k = scores[c] / 100; return [cx + x * R * k, cy + y * R * k]; });
-  const lines = axes.map(([, x, y]) => `<line x1="${cx}" y1="${cy}" x2="${cx + x * R}" y2="${cy + y * R}" stroke="rgba(242,239,230,.22)" stroke-dasharray="3 3"/>`).join('');
-  const labels = axes.map(([c, x, y, name, anchor, dy]) => `<text x="${cx + x * (R + 8)}" y="${cy + y * (R + 4) + dy}" text-anchor="${anchor}" ${c === 'mental' ? 'style="fill:#8AB4FF"' : ''}>${name}</text>`).join('');
+  const lines = axes.map(([, x, y]) => `<line x1="${cx}" y1="${cy}" x2="${cx + x * R}" y2="${cy + y * R}" stroke="rgba(243,245,238,.22)" stroke-dasharray="3 3"/>`).join('');
+  const labels = axes.map(([c, x, y, name, anchor, dy]) => `<text x="${cx + x * (R + 8)}" y="${cy + y * (R + 4) + dy}" text-anchor="${anchor}" ${c === 'mental' ? 'style="fill:#7FB2FF"' : ''}>${name}</text>`).join('');
   return `<svg class="radar" viewBox="-45 0 390 265" width="100%">
     ${grid}${lines}
-    <polygon points="${pts.map((p) => p.join(',')).join(' ')}" fill="rgba(255,201,60,.25)" stroke="#FFC93C" stroke-width="2.5"/>
-    ${pts.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5" fill="#FFC93C" stroke="#0A2B21" stroke-width="2"/>`).join('')}
+    <polygon points="${pts.map((p) => p.join(',')).join(' ')}" fill="rgba(255,178,26,.25)" stroke="#FFB21A" stroke-width="2.5"/>
+    ${pts.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5" fill="#FFB21A" stroke="#070F1D" stroke-width="2"/>`).join('')}
     ${labels}
   </svg>`;
 }
@@ -1135,9 +1149,9 @@ function viewLesson(id) {
           ${q.scheme ? `<section class="pitch-card">
             <div data-pitch>${renderPitch(q.scheme, { uid: `${lesson.id}-${st.step}` })}</div>
             <div class="legend">
-              <span><i style="background:#FFC93C"></i>Біздің команда</span>
-              <span><i style="background:#E5483A"></i>Қарсылас</span>
-              <span><i style="background:transparent;border:2px solid #F2EFE6"></i>Сен</span>
+              <span><i style="background:#FFB21A"></i>Біздің команда</span>
+              <span><i style="background:#FF5D50"></i>Қарсылас</span>
+              <span><i style="background:transparent;border:2px solid #F3F5EE"></i>Сен</span>
               ${LEGEND.filter((l) => (q.scheme.arrows || []).some((a) => a.k === l.k)).map((l) =>
                 `<span><em style="border-color:${l.color};${l.dashed ? 'border-top-style:dashed' : ''}"></em>${l.label}</span>`).join('')}
             </div>
@@ -1376,9 +1390,9 @@ function landingBoard() {
   ];
   const theirs = [[4, 74, 28], [5, 76, 41], [6, 64, 24], [8, 63, 46], [2, 84, 48], [3, 88, 14], [1, 100, 34]];
   const W = 105, H = 68;
-  const s = 'stroke="rgba(242,239,230,.5)" stroke-width=".35" fill="none"';
+  const s = 'stroke="rgba(243,245,238,.5)" stroke-width=".35" fill="none"';
   let stripes = '';
-  for (let i = 0; i < 10; i++) if (i % 2 === 0) stripes += `<rect x="${(W / 10) * i}" y="0" width="${W / 10}" height="${H}" fill="rgba(242,239,230,.028)"/>`;
+  for (let i = 0; i < 10; i++) if (i % 2 === 0) stripes += `<rect x="${(W / 10) * i}" y="0" width="${W / 10}" height="${H}" fill="rgba(243,245,238,.028)"/>`;
   const lines = `
     <rect x="1" y="1" width="${W - 2}" height="${H - 2}" ${s}/>
     <line x1="${W / 2}" y1="1" x2="${W / 2}" y2="${H - 1}" ${s}/>
@@ -1401,7 +1415,7 @@ function landingBoard() {
     const ux = (x2 - x1) / len, uy = (y2 - y1) / len;
     const ex = x2 - ux * 3, ey = y2 - uy * 3; // ұшына орын
     const bx = ex - ux * 2.2, by = ey - uy * 2.2, px = -uy * 1.3, py = ux * 1.3;
-    const col = k === 'pass' ? '#8AB4FF' : '#F2EFE6';
+    const col = k === 'pass' ? '#7FB2FF' : '#F3F5EE';
     const dash = k === 'run' ? 'stroke-dasharray="1.6 1.2"' : '';
     // жүгіріс сызығы үзік болғандықтан «сызылу» анимациясын тек паста қолданамыз
     const line = k === 'run'
@@ -1410,8 +1424,8 @@ function landingBoard() {
     return `${line}<path class="head-tip" style="--d:${(d + 0.5).toFixed(2)}s" d="M ${ex} ${ey} L ${bx + px} ${by + py} L ${bx - px} ${by - py} Z" fill="${col}"/>`;
   }).join('');
   const magnet = (n, x, y, team, i) => {
-    const fill = team === 'a' ? '#FFC93C' : '#E5483A';
-    const txt = team === 'a' ? '#16261D' : '#FFFFFF';
+    const fill = team === 'a' ? '#FFB21A' : '#FF5D50';
+    const txt = team === 'a' ? '#0A1324' : '#FFFFFF';
     const fx = team === 'a' ? -14 : 14, fy = 10;
     return `<g class="magnet" style="--d:${(0.08 * i).toFixed(2)}s;--fx:${fx}px;--fy:${fy}px">
       <circle cx="${x}" cy="${y + 0.55}" r="2.7" fill="rgba(0,0,0,.35)"/>
@@ -1441,123 +1455,172 @@ function landingBoard() {
   const ball = `<g class="magnet" style="--d:1.2s;--fx:0px;--fy:-6px"><g>${ballMove}<circle cx="45.6" cy="35.8" r="1.1" fill="#fff" stroke="#111" stroke-width=".25"/></g></g>`;
   return `<figure class="board" style="margin:0">
     <svg viewBox="-1 -1 ${W + 2} ${H + 2}" role="img" aria-label="Тактика тақтасы: біздің команда үшінші адамның жүгірісімен шабуыл жасайды">
-      <rect x="-1" y="-1" width="${W + 2}" height="${H + 2}" rx="3" fill="#145240"/>
+      <rect x="-1" y="-1" width="${W + 2}" height="${H + 2}" rx="3" fill="#12573B"/>
       ${stripes}${lines}${arrowEls}${mags}${ball}
     </svg>
-    <figcaption class="board-caption"><span>Бүгінгі сабақ: үшінші адамның жүгірісі</span><span style="color:var(--green)">Тактика</span></figcaption>
+    <figcaption class="board-caption"><span class="live">Тікелей: үшінші адамның жүгірісі</span><span style="color:var(--green)">Тактика</span></figcaption>
   </figure>`;
 }
 
 const POS_ZONES = { gk: [1, 20, 14, 28], def: [12, 4, 22, 60], mid: [36, 4, 30, 60], fwd: [64, 4, 30, 60] };
 function posBoard(pos) {
   const W = 105, H = 68;
-  const s = 'stroke="rgba(242,239,230,.45)" stroke-width=".4" fill="none"';
+  const s = 'stroke="rgba(243,245,238,.45)" stroke-width=".4" fill="none"';
   const [x, y, w, h] = POS_ZONES[pos];
-  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;border-radius:18px" aria-hidden="true">
-    <rect width="${W}" height="${H}" fill="#145240"/>
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;border-radius:8px" aria-hidden="true">
+    <rect width="${W}" height="${H}" fill="#12573B"/>
     <rect x="1" y="1" width="${W - 2}" height="${H - 2}" ${s}/><line x1="${W / 2}" y1="1" x2="${W / 2}" y2="${H - 1}" ${s}/>
     <circle cx="${W / 2}" cy="${H / 2}" r="9" ${s}/>
     <rect x="1" y="${(H - 40) / 2}" width="16.5" height="40" ${s}/><rect x="${W - 17.5}" y="${(H - 40) / 2}" width="16.5" height="40" ${s}/>
-    <rect class="zone" x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="rgba(255,201,60,.22)" stroke="#FFC93C" stroke-width=".6" stroke-dasharray="2 1.5"/>
+    <rect class="zone" x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="rgba(255,178,26,.22)" stroke="#FFB21A" stroke-width=".6" stroke-dasharray="2 1.5"/>
   </svg>`;
 }
 
 let landingPos = 'mid';
+let landingCleanup = null;
+
+// Табло: әр цифр кездейсоқ сандар арқылы айналып, нақты мәнге тоқтайды
+function flapDigits(value) {
+  return `<span class="digits" data-flap="${value}" aria-label="${value}">${String(value).split('').map(() => '<span class="flap" aria-hidden="true">0</span>').join('')}</span>`;
+}
+function runFlaps(root) {
+  const still = reducedMotion();
+  root.querySelectorAll('[data-flap]').forEach((box, bi) => {
+    const target = String(box.dataset.flap).split('');
+    box.querySelectorAll('.flap').forEach((cell, i) => {
+      if (still) { cell.textContent = target[i]; return; }
+      let n = 0;
+      const ticks = 10 + i * 4 + bi * 3;
+      const t = setInterval(() => {
+        n += 1;
+        cell.textContent = n >= ticks ? target[i] : String(Math.floor(Math.random() * 10));
+        cell.classList.remove('tick'); void cell.offsetWidth; cell.classList.add('tick');
+        if (n >= ticks) clearInterval(t);
+      }, 55);
+    });
+  });
+}
+
 function viewLanding() {
-  const day = [
+  const program = [
     ['tactics', 'whistle', 'Үшбұрыш: пас нұсқалары', 'Алаңдағы жағдайды оқып, шешім қабылда', 8],
     ['physical', 'bolt', 'Жарылғыш спринттер', 'Таймер мен сеттер сені бағыттайды', 15],
     ['mental', 'brain', 'Шаршы тыныс', 'Матч алдындағы толқуды бас', 4],
     ['technique', 'ball', 'Қабырғамен пас', 'Екі аяқпен дәлдік пен бірінші жанасу', 10],
   ];
-  const total = day.reduce((a, d) => a + d[4], 0);
+  const total = program.reduce((a, d) => a + d[4], 0);
+  let clock = 0;
+  const kicks = program.map((d) => { const k = clock; clock += d[4]; return k; });
   const posLessons = (p) => LESSONS.filter((l) => l.position === p);
-  const posPanel = (p) => `<div class="pos-panel" data-pos-panel>
+  const posPanel = (p) => `<div class="pos-panel">
       ${posBoard(p)}
       <h3 style="margin-top:18px">${esc(POSITIONS[p])}</h3>
       <p class="muted" style="margin:0">${posLessons(p).length} сабақ, ${posLessons(p).reduce((a, l) => a + l.questions.length, 0)} тактикалық сұрақ және арнайы жаттығулар.</p>
       <ul>${posLessons(p).map((l) => `<li>${icon('checkCircle', { size: 18 })}<span><b style="font-weight:600">${esc(l.title)}</b><br><span class="muted" style="font-size:14px">${esc(l.summary)}</span></span></li>`).join('')}</ul>
     </div>`;
   const quote = QUOTES[0];
+  const quoteWords = `«${quote.text}»`.split(/\s+/).map((w, i) => `<span class="w" style="--i:${i}">${esc(w)}</span>`).join(' ');
+  const tickerItems = (words) => {
+    const one = words.map((w) => `<span>${esc(w)} ${icon('ball', { size: 26 })}</span>`).join('');
+    return `<div class="track" aria-hidden="true">${one}${one}</div>`;
+  };
+  const crowd = Array.from({ length: 36 }, (_, i) => `<i style="--i:${i}"></i>`).join('');
+  const jersey = [10, 7, 9, 4, 1, 8, 11, 6];
 
   const html = `<div class="landing">
   <header class="l-nav"><div class="l-wrap">
     <a class="l-brand" href="#/" aria-label="Футбол Коуч, басты бет"><i>${icon('ball', { size: 20 })}</i>Футбол Коуч</a>
     <span class="grow"></span>
-    <button class="link" data-scroll="l-day" style="color:var(--muted);font-weight:500;padding:10px 6px">Жоспар</button>
-    <button class="link" data-scroll="l-pos" style="color:var(--muted);font-weight:500;padding:10px 6px">Позициялар</button>
+    <button class="link" data-scroll="l-day">Жоспар</button>
+    <button class="link" data-scroll="l-pos">Позициялар</button>
+    <button class="link" data-scroll="l-leg">Аңыздар</button>
     <a class="btn btn-secondary" href="#/auth">Кіру</a>
   </div></header>
 
   <main id="main">
-    <section class="l-hero"><div class="l-wrap">
-      <div>
-        <h1>Күн сайын бір&nbsp;қадам алға</h1>
-        <p class="lead">Тактика, физика, психология және техника. Әр күні 15–40 минуттық жеке жоспар, сенің жасыңа, позицияңа және деңгейіңе қарай.</p>
-        <div class="l-cta">
-          <a class="btn btn-primary" href="#/auth">Тегін бастау</a>
-          <button class="btn btn-secondary" data-scroll="l-day">Жоспарды көру</button>
+    <section class="l-hero">
+      <div class="beams" aria-hidden="true"><span class="beam b1"></span><span class="beam b2"></span><span class="beam b3"></span></div>
+      <span class="lamp l1" aria-hidden="true"></span><span class="lamp l2" aria-hidden="true"></span>
+      <div class="l-wrap">
+        <div>
+          <h1 aria-label="Күн сайын бір қадам алға">
+            <span class="ln" aria-hidden="true"><span style="--d:.1s">Күн сайын</span></span>
+            <span class="ln out" aria-hidden="true"><span style="--d:.25s">бір қадам</span></span>
+            <span class="ln" aria-hidden="true"><span style="--d:.4s">алға</span></span>
+          </h1>
+          <p class="lead">Тактика, физика, психология және техника. Әр күні 15–40 минуттық жеке жоспар, сенің жасыңа, позицияңа және деңгейіңе қарай.</p>
+          <div class="l-cta">
+            <a class="btn btn-primary" href="#/auth">Тегін бастау</a>
+            <button class="btn btn-secondary" data-scroll="l-day">Жоспарды көру</button>
+          </div>
+          <div class="scoreboard" role="list" aria-label="Платформада">
+            <div class="cell" role="listitem">${flapDigits(state.exercises.length)}<small>жаттығу</small></div>
+            <div class="cell" role="listitem">${flapDigits(LESSONS.length)}<small>позиция сабағы</small></div>
+            <div class="cell" role="listitem">${flapDigits(STORIES.length)}<small>аңыз тарихы</small></div>
+          </div>
         </div>
-        <div class="meta">
-          <span><b>${state.exercises.length}</b>жаттығу</span>
-          <span><b>${LESSONS.length}</b>позиция сабағы</span>
-          <span><b>${STORIES.length}</b>аңыз тарихы</span>
-        </div>
+        ${landingBoard()}
       </div>
-      ${landingBoard()}
-    </div></section>
+    </section>
+
+    <div class="ticker">${tickerItems(['Тактика', 'Физика', 'Психология', 'Техника', 'Күн сайын'])}</div>
 
     <section class="l-section" id="l-day"><div class="l-wrap">
-      <h2>Бір күн, төрт қысқа жаттығу</h2>
-      <p class="sub">Таңертең жоспар өзі құрылады. Әр жаттығуды орындаған сайын серия мен ұпай жиналады, ал прогресс графикте көрінеді.</p>
-      <div class="day">
-        <div class="day-list">
-          ${day.map(([cat, ic, t, sub, min]) => `<div class="day-item" style="--c:${CATEGORIES[cat].color}">
-            <span class="mag">${icon(ic, { size: 24 })}</span>
-            <span><small style="color:${CATEGORIES[cat].color};font-weight:600">${CATEGORIES[cat].name}</small><b>${esc(t)}</b><small>${esc(sub)}</small></span>
-            <span class="min">${min} мин</span>
+      <h2 data-reveal>Бүгінгі матч бағдарламасы</h2>
+      <p class="sub" data-reveal style="--rd:.1s">Таңертең жоспар өзі құрылады. Әр жаттығу бітсе, серия мен ұпай жиналады, ал прогресс графикте көрінеді.</p>
+      <div class="program">
+        <div class="fixtures" data-reveal-line>
+          ${program.map(([cat, ic, t, sub, min], i) => `<div class="fixture" data-reveal style="--c:${CATEGORIES[cat].color};--rd:${(0.12 * i).toFixed(2)}s">
+            <span class="kick">${String(kicks[i]).padStart(2, '0')}′<small>${min} мин</small></span>
+            <span><span class="cat">${CATEGORIES[cat].name}</span><b>${esc(t)}</b><small class="d">${esc(sub)}</small></span>
+            <span class="ic-box">${icon(ic, { size: 24 })}</span>
           </div>`).join('')}
         </div>
-        <div class="day-note"><b>${total} мин</b>орташа күндік жоспар. Мектептен кейін де, команда жаттығуының алдында да үлгересің.</div>
+        <div class="fulltime" data-reveal style="--rd:.3s"><b>${total}′</b>Толық уақыт: орташа күндік жоспар. Мектептен кейін де, команда жаттығуының алдында да үлгересің.</div>
       </div>
     </div></section>
 
     <section class="l-section" id="l-pos"><div class="l-wrap">
       <div class="pos">
         <div>
-          <h2>Өз позицияңның мектебі</h2>
-          <p class="sub">Қақпашыға, қорғаушыға, жартылай қорғаушыға және шабуылшыға бөлек сабақтар: қысқа теория, алаңдағы жағдай, сұрақ және бапкердің түсіндірмесі.</p>
-          <div class="pos-tabs" role="group" aria-label="Позиция таңдау">
+          <h2 data-reveal>Өз позицияңның мектебі</h2>
+          <p class="sub" data-reveal style="--rd:.1s">Қақпашыға, қорғаушыға, жартылай қорғаушыға және шабуылшыға бөлек сабақтар: қысқа теория, алаңдағы жағдай, сұрақ және бапкердің түсіндірмесі.</p>
+          <div class="pos-tabs" role="group" aria-label="Позиция таңдау" data-reveal style="--rd:.2s">
             ${Object.entries(POSITIONS).map(([k, v]) => `<button class="filter ${k === landingPos ? 'on' : ''}" data-lpos="${k}" aria-pressed="${k === landingPos}">${v}</button>`).join('')}
           </div>
         </div>
-        <div data-pos-slot>${posPanel(landingPos)}</div>
+        <div data-pos-slot data-reveal style="--rd:.15s">${posPanel(landingPos)}</div>
       </div>
     </div></section>
 
-    <section class="l-section"><div class="l-wrap">
-      <h2>Аңыздар да бір кезде осылай бастаған</h2>
-      <p class="sub">Академиядан шығарылған, соғыстан аман қалған, кеш бастаған. Платформада ${STORIES.length} ойыншының кәсіби жолы бар.</p>
+    <div class="ticker alt">${tickerItems(STORIES.map((s) => s.name))}</div>
+
+    <section class="l-section" id="l-leg"><div class="l-wrap">
+      <h2 data-reveal>Аңыздар да осылай бастаған</h2>
+      <p class="sub" data-reveal style="--rd:.1s">Академиядан шығарылған, соғыстан аман қалған, кеш бастаған. Платформада ${STORIES.length} ойыншының кәсіби жолы бар.</p>
       <div class="legends">
-        ${STORIES.map((p) => `<article class="legend-card" style="--c:${p.color}">
-          <span class="num" aria-hidden="true">${esc(initials(p.name))}</span>
-          <div><b>${esc(p.name)}</b><div class="muted" style="font-size:14px">${esc(p.country)}, ${esc(p.position.toLowerCase())}</div></div>
+        ${STORIES.map((p, i) => `<article class="legend-card" data-reveal style="--c:${p.color};--rd:${(0.08 * Math.min(i, 4)).toFixed(2)}s">
+          <span class="num" aria-hidden="true">${jersey[i % jersey.length]}</span>
+          <span class="init" aria-hidden="true">${esc(initials(p.name))}</span>
           <p>${esc(p.lesson)}</p>
+          <b>${esc(p.name)}</b>
+          <span class="who">${esc(p.country)}, ${esc(p.position.toLowerCase())}</span>
         </article>`).join('')}
       </div>
     </div></section>
 
-    <figure class="l-quote" style="margin:0"><div class="l-wrap">
-      <blockquote>«${esc(quote.text)}»</blockquote>
+    <figure class="l-quote" style="margin:0" data-reveal-words><div class="l-wrap">
+      <blockquote aria-label="${esc(quote.text)}">${quoteWords}</blockquote>
       <figcaption>${esc(quote.author)}, ${esc(quote.role.toLowerCase())}</figcaption>
     </div></figure>
 
-    <section class="l-final"><div class="l-wrap"><div class="box">
+    <section class="l-final"><div class="l-wrap"><div class="box" data-reveal>
       <div>
-        <h2>Бүгін бірінші жаттығуды жаса</h2>
-        <p style="margin-top:12px">Тіркелу бір минут алады. Тіркелмей де бастауға болады, ол кезде прогресс осы құрылғыда сақталады.</p>
+        <h2>Бүгін алаңға шық</h2>
+        <p style="margin-top:14px">Тіркелу бір минут алады. Тіркелмей де бастауға болады, ол кезде прогресс осы құрылғыда сақталады.</p>
       </div>
       <a class="btn" href="#/auth">Тегін бастау</a>
+      <div class="crowd" style="--n:36" aria-hidden="true">${crowd}</div>
     </div></div></section>
   </main>
 
@@ -1566,7 +1629,7 @@ function viewLanding() {
 
   const mount = () => {
     app.querySelectorAll('[data-scroll]').forEach((b) => {
-      b.onclick = () => document.getElementById(b.dataset.scroll)?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+      b.onclick = () => document.getElementById(b.dataset.scroll)?.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'start' });
     });
     app.querySelectorAll('[data-lpos]').forEach((b) => {
       b.onclick = () => {
@@ -1575,6 +1638,15 @@ function viewLanding() {
         app.querySelector('[data-pos-slot]').innerHTML = posPanel(landingPos);
       };
     });
+    runFlaps(app);
+    // Трибунадағы толқын сияқты: бөлім көрінгенде пайда болады
+    const targets = app.querySelectorAll('[data-reveal], [data-reveal-line], [data-reveal-words]');
+    if (!('IntersectionObserver' in window) || reducedMotion()) { targets.forEach((t) => t.classList.add('in')); return; }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' });
+    targets.forEach((t) => io.observe(t));
+    cleanups.push(() => io.disconnect());
   };
   return { html, mount, wide: true };
 }
