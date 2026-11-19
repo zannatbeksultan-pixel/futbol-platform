@@ -26,10 +26,42 @@ const LS = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* */ } },
 };
 
-function toast(text) {
+const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+// Сандар нөлден өсіп шығады, жолақтар мен сақиналар толады
+function animateNumbers(root) {
+  if (reducedMotion()) return;
+  root.querySelectorAll('.stat b, .meta b, .ring-label b, [data-count]').forEach((el) => {
+    const raw = el.textContent.trim();
+    if (!/^\d[\d\s\u00a0]*$/.test(raw)) return;
+    const target = Number(raw.replace(/\D/g, ''));
+    if (!target) return;
+    const t0 = performance.now(), dur = 700;
+    const step = (t) => {
+      const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      el.textContent = Math.round(target * e).toLocaleString('ru-RU');
+      if (k < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  });
+  root.querySelectorAll('.bar > i').forEach((i) => {
+    const w = i.style.width; i.style.transition = 'none'; i.style.width = '0';
+    requestAnimationFrame(() => requestAnimationFrame(() => { i.style.transition = ''; i.style.width = w; }));
+  });
+  root.querySelectorAll('.ring-fg').forEach((c) => {
+    if (c.closest('[data-timer]')) return;
+    const full = c.getAttribute('stroke-dasharray'), to = c.getAttribute('stroke-dashoffset');
+    c.style.transition = 'none'; c.style.strokeDashoffset = full;
+    requestAnimationFrame(() => requestAnimationFrame(() => { c.style.transition = ''; c.style.strokeDashoffset = to; }));
+  });
+}
+
+function toast(text, kind) {
   let t = document.querySelector('.toast');
   if (!t) { t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.setAttribute('aria-live', 'polite'); document.body.appendChild(t); }
   t.textContent = text;
+  t.classList.toggle('win', kind === 'win');
+  t.classList.remove('show'); void t.offsetWidth;
   t.classList.add('show');
   clearTimeout(t._h);
   t._h = setTimeout(() => t.classList.remove('show'), 2200);
@@ -306,7 +338,7 @@ async function finish(ex, day, note) {
   app.querySelectorAll('[data-finish],[data-act="finish"],[data-save]').forEach((b) => { b.disabled = true; });
   try {
     await store.complete(ex, day, note);
-    toast(`+${XP_PER} XP — ${CATEGORIES[ex.category].name} аяқталды!`);
+    toast(`+${XP_PER} XP — ${CATEGORIES[ex.category].name} аяқталды!`, 'win');
     const nx = nextAfter(ex, day);
     location.hash = nx && day === today() ? `#/ex/${nx.id}?d=${day}` : '#/';
   } catch (e) {
@@ -460,7 +492,7 @@ function viewWorkout(ex, day) {
         label = '✓'; value = 1; total = 1; color = 'var(--green)'; sub = 'Барлық сет орындалды';
       }
       timerEl.innerHTML = ring(value, total, { size: 220, stroke: 14, color, label, sub });
-      timerEl.querySelector('.ring-label b').style.cssText = 'font:800 46px/1 var(--head);letter-spacing:-.02em';
+      timerEl.querySelector('.ring-label b').style.cssText = 'font:600 60px/1 var(--display);letter-spacing:-.02em';
       app.querySelector('[data-left]').textContent = `${sets - st.setsDone} / ${sets}`;
       app.querySelectorAll('.set-dot').forEach((d, i) => d.classList.toggle('on', i < st.setsDone));
 
@@ -1342,7 +1374,7 @@ function landingBoard() {
     [6, 44, 34], [8, 47, 18], [10, 52, 50],
     [7, 70, 60], [9, 66, 34], [11, 72, 9],
   ];
-  const theirs = [[4, 74, 28], [5, 76, 41], [6, 64, 24], [8, 63, 46], [2, 86, 56], [3, 88, 14], [1, 100, 34]];
+  const theirs = [[4, 74, 28], [5, 76, 41], [6, 64, 24], [8, 63, 46], [2, 84, 48], [3, 88, 14], [1, 100, 34]];
   const W = 105, H = 68;
   const s = 'stroke="rgba(242,239,230,.5)" stroke-width=".35" fill="none"';
   let stripes = '';
@@ -1385,11 +1417,28 @@ function landingBoard() {
       <circle cx="${x}" cy="${y + 0.55}" r="2.7" fill="rgba(0,0,0,.35)"/>
       <circle cx="${x}" cy="${y}" r="2.7" fill="${fill}"/>
       <circle cx="${x}" cy="${y}" r="2.05" fill="none" stroke="rgba(0,0,0,.18)" stroke-width=".35"/>
-      <text x="${x}" y="${y + 0.95}" text-anchor="middle" font-size="2.5" font-weight="700" fill="${txt}" font-family="Unbounded,Montserrat,sans-serif">${n}</text>
+      <text x="${x}" y="${y + 0.95}" text-anchor="middle" font-size="2.5" font-weight="700" fill="${txt}" font-family="Oswald,Arial Narrow,sans-serif">${n}</text>
     </g>`;
   };
-  const mags = [...ours.map((m, i) => magnet(m[0], m[1], m[2], 'a', i)), ...theirs.map((m, i) => magnet(m[0], m[1], m[2], 'b', i + 4))].join('');
-  const ball = `<g class="magnet" style="--d:1.2s;--fx:0px;--fy:-6px"><circle cx="45.6" cy="35.8" r="1.1" fill="#fff" stroke="#111" stroke-width=".25"/></g>`;
+  const still = reducedMotion();
+  // Схема ойнайды: 6 → 9 пас, 8 бос аймаққа жүгіреді, 9 → 8 пас. 6 секундтық цикл.
+  const LOOP = 'dur="6s" begin="3.6s" repeatCount="indefinite" calcMode="spline"';
+  const ease = (n) => Array(n).fill('.4 0 .2 1').join(';');
+  const run8 = still ? '' : `<animateTransform attributeName="transform" type="translate" ${LOOP}
+      values="0 0;0 0;32 6;32 6;0 0" keyTimes="0;.15;.5;.88;1" keySplines="${ease(4)}"/>`;
+  const run7 = still ? '' : `<animateTransform attributeName="transform" type="translate" ${LOOP}
+      values="0 0;0 0;16 -2;16 -2;0 0" keyTimes="0;.3;.62;.88;1" keySplines="${ease(4)}"/>`;
+  const magnetMoving = (html, anim) => html.replace('<circle', `<g>${anim}<circle`).replace(/<\/g>\s*$/, '</g></g>');
+  const mags = [
+    ...ours.map((m, i) => {
+      const h = magnet(m[0], m[1], m[2], 'a', i);
+      return m[0] === 8 ? magnetMoving(h, run8) : m[0] === 7 ? magnetMoving(h, run7) : h;
+    }),
+    ...theirs.map((m, i) => magnet(m[0], m[1], m[2], 'b', i + 4)),
+  ].join('');
+  const ballMove = still ? '' : `<animateTransform attributeName="transform" type="translate" ${LOOP}
+      values="0 0;19.4 -1.6;19.4 -1.6;33.4 -11.6;33.4 -11.6;0 0" keyTimes="0;.15;.32;.5;.88;1" keySplines="${ease(5)}"/>`;
+  const ball = `<g class="magnet" style="--d:1.2s;--fx:0px;--fy:-6px"><g>${ballMove}<circle cx="45.6" cy="35.8" r="1.1" fill="#fff" stroke="#111" stroke-width=".25"/></g></g>`;
   return `<figure class="board" style="margin:0">
     <svg viewBox="-1 -1 ${W + 2} ${H + 2}" role="img" aria-label="Тактика тақтасы: біздің команда үшінші адамның жүгірісімен шабуыл жасайды">
       <rect x="-1" y="-1" width="${W + 2}" height="${H + 2}" rx="3" fill="#145240"/>
@@ -1566,6 +1615,8 @@ function render() {
   app.classList.toggle('wide', !!view.wide);
   app.innerHTML = view.html;
   window.scrollTo(0, 0);
+  app.classList.remove('enter'); void app.offsetWidth; app.classList.add('enter');
+  animateNumbers(app);
   renderedDay = today();
   const main = app.querySelector('main');
   if (main) { main.id = 'main'; main.tabIndex = -1; }

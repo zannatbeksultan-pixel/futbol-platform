@@ -84,7 +84,7 @@ export function renderPitch(payload, { uid = 'p' } = {}) {
     return `<g class="pitch-player">${ring}
       <circle cx="${p.x}" cy="${p.y + 0.35}" r="2.3" fill="rgba(0,0,0,.35)"/>
       <circle cx="${p.x}" cy="${p.y}" r="2.3" fill="${fill}" stroke="rgba(255,255,255,.9)" stroke-width=".3"/>
-      <text x="${p.x}" y="${p.y + 0.95}" text-anchor="middle" font-size="2.6" font-weight="800" fill="${text}" font-family="Unbounded,Montserrat,system-ui,sans-serif">${p.n}</text>
+      <text x="${p.x}" y="${p.y + 0.95}" text-anchor="middle" font-size="2.6" font-weight="800" fill="${text}" font-family="Oswald,Arial Narrow,sans-serif">${p.n}</text>
     </g>`;
   }).join('');
 
