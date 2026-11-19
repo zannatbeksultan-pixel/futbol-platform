@@ -9,8 +9,15 @@ const ALLOWED_ORIGINS = [
   "http://localhost:8000",
 ];
 
+// Vercel-дегі сайт пен оның алдын ала көру нұсқалары: https://futbol-platform*.vercel.app
+const VERCEL_ORIGIN_RE = /^https:\/\/futbol-platform[a-z0-9-]*\.vercel\.app$/;
+
+function isAllowed(origin: string | null): origin is string {
+  return !!origin && (ALLOWED_ORIGINS.includes(origin) || VERCEL_ORIGIN_RE.test(origin));
+}
+
 function corsHeaders(origin: string | null) {
-  const allow = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  const allow = isAllowed(origin) ? origin : ALLOWED_ORIGINS[0];
   return {
     "Access-Control-Allow-Origin": allow,
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
