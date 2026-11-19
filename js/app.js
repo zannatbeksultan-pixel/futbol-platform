@@ -424,7 +424,7 @@ function viewWorkout(ex, day) {
       <span class="chip hero-badge ${intensity[1]}">${icon('bolt', { size: 12 })} ${intensity[0]}</span>
       <div class="row between" style="align-items:flex-end;gap:12px">
         <div class="h-md" style="max-width:60%">${esc(ex.title)}</div>
-        <span class="chip" style="text-transform:none;letter-spacing:0">${sets} подход × ${esc(p.reps)}</span>
+        <span class="chip" style="text-transform:none;letter-spacing:0">${sets} сет × ${esc(p.reps)}</span>
       </div>
     </section>
 
