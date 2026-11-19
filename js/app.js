@@ -986,6 +986,8 @@ function authError(e) {
   if (m.includes('invalid login')) return 'Пошта немесе құпиясөз қате.';
   if (m.includes('already registered')) return 'Бұл пошта тіркелген. «Кіру» батырмасын басыңыз.';
   if (m.includes('email not confirmed')) return 'Алдымен поштаңызға келген хаттағы сілтемені басыңыз.';
+  if (m.includes('invalid email')) return 'Электрондық поштаны дұрыс енгізіңіз.';
+  if (m.includes('weak password')) return 'Құпиясөз 6–72 таңба болуы керек.';
   if (m.includes('серверге')) return e.message;
   return 'Қате орын алды. Интернетті тексеріп, қайта көріңіз.';
 }

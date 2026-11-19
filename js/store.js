@@ -141,18 +141,30 @@ export function cloudAvailable() {
   return probe;
 }
 
+// Тіркелу серверлік функция арқылы: аккаунт бірден расталады, растау хаты керек емес.
 export async function signUp(email, password) {
   const sb = await getClient();
   if (!sb) throw new Error('Серверге қосылу мүмкін болмады.');
-  const redirect = location.origin + location.pathname;
-  const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: redirect } });
-  if (error) throw error;
-  if (!data.session) return { needsConfirm: true };
-  state.user = data.user;
-  state.mode = 'cloud';
-  LS.set('fp_mode', 'cloud');
-  await loadCloud();
-  await migrateGuest();
+  let res;
+  try {
+    res = await fetch(`${SUPABASE_URL}/functions/v1/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY },
+      body: JSON.stringify({ email, password }),
+    });
+  } catch {
+    throw new Error('Серверге қосылу мүмкін болмады.');
+  }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const map = {
+      already_registered: 'User already registered',
+      invalid_email: 'invalid email',
+      weak_password: 'weak password',
+    };
+    throw new Error(map[data.error] || 'signup failed');
+  }
+  await signIn(email, password);
   return { needsConfirm: false };
 }
 
