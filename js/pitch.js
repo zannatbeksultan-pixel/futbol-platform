@@ -2,7 +2,7 @@
 const W = 68;
 const H = 105;
 
-const ARROW_COLORS = { run: '#FFFFFF', pass: '#FDE047', drib: '#38BDF8' };
+const ARROW_COLORS = { run: '#F2EFE6', pass: '#8AB4FF', drib: '#FF8C7E' };
 
 function lines() {
   const s = 'stroke="rgba(255,255,255,.55)" stroke-width=".35" fill="none"';
@@ -76,15 +76,15 @@ export function renderPitch(payload, { uid = 'p' } = {}) {
   }).join('');
 
   const playerEls = players.map((p) => {
-    const fill = p.t === 'a' ? '#22E55B' : '#E11D48';
-    const text = p.t === 'a' ? '#06240F' : '#FFFFFF';
+    const fill = p.t === 'a' ? '#FFC93C' : '#E5483A';
+    const text = p.t === 'a' ? '#16261D' : '#FFFFFF';
     const ring = p.hl
-      ? `<circle cx="${p.x}" cy="${p.y}" r="3.2" fill="none" stroke="#FDE047" stroke-width=".5" class="pitch-pulse"/>`
+      ? `<circle cx="${p.x}" cy="${p.y}" r="3.2" fill="none" stroke="#F2EFE6" stroke-width=".5" class="pitch-pulse"/>`
       : '';
     return `<g class="pitch-player">${ring}
       <circle cx="${p.x}" cy="${p.y + 0.35}" r="2.3" fill="rgba(0,0,0,.35)"/>
       <circle cx="${p.x}" cy="${p.y}" r="2.3" fill="${fill}" stroke="rgba(255,255,255,.9)" stroke-width=".3"/>
-      <text x="${p.x}" y="${p.y + 0.95}" text-anchor="middle" font-size="2.6" font-weight="800" fill="${text}" font-family="Inter,system-ui,sans-serif">${p.n}</text>
+      <text x="${p.x}" y="${p.y + 0.95}" text-anchor="middle" font-size="2.6" font-weight="800" fill="${text}" font-family="Unbounded,Montserrat,system-ui,sans-serif">${p.n}</text>
     </g>`;
   }).join('');
 
@@ -96,7 +96,7 @@ export function renderPitch(payload, { uid = 'p' } = {}) {
   return `<svg class="pitch" viewBox="-1 -2 ${W + 2} ${H + 4}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Тактикалық схема">
     <defs>
       <linearGradient id="${uid}-grass" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#14532D"/><stop offset="1" stop-color="#0F3D22"/>
+        <stop offset="0" stop-color="#145240"/><stop offset="1" stop-color="#0E4031"/>
       </linearGradient>
       ${markers}
     </defs>

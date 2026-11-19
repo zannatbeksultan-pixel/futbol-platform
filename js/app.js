@@ -107,7 +107,7 @@ function topbar({ eyebrow = 'Жаттықтырушы', title, back = false }) {
       ? `<button class="icon-btn" data-back aria-label="Артқа">${icon('arrowLeft', { size: 22 })}</button>`
       : `<div class="logo">${icon('ball', { size: 22 })}</div>`}
     <div class="titles">
-      ${back ? '' : `<div class="eyebrow">${esc(eyebrow)}</div>`}
+      
       <h1>${esc(title)}</h1>
     </div>
     ${back ? '' : `<a class="icon-btn" href="#/ask" aria-label="Бапкерге сұрақ">${icon('chat', { size: 22 })}</a>`}
@@ -127,7 +127,7 @@ function nav(active) {
     `<a href="${href}" class="${active === id ? 'on' : ''}"${active === id ? ' aria-current="page"' : ''}>${icon(ic, { size: 22 })}<span>${label}</span></a>`).join('')}</nav>`;
 }
 
-function ring(value, total, { size = 112, stroke = 10, color = 'var(--green)', track = '#1E2638', label = '', sub = '' } = {}) {
+function ring(value, total, { size = 112, stroke = 10, color = 'var(--green)', track = '#0A2B21', label = '', sub = '' } = {}) {
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const pct = total ? Math.min(1, value / total) : 0;
@@ -145,13 +145,13 @@ function drillCard(ex, { day, status, next = false }) {
   const cat = CATEGORIES[ex.category];
   let right;
   if (status === 'done') right = `<span class="status done">${icon('checkCircle', { size: 16 })} Аяқталды</span>`;
-  else if (next) right = `<span class="status go">Бастау ${icon('arrowRight', { size: 16 })}</span>`;
+  else if (next) right = `<span class="status go">Бастау</span>`;
   else if (status === 'wait') right = `<span class="status wait">${icon('hourglass', { size: 14 })} Күтілуде</span>`;
   else right = `<span class="dim">${icon('chevronRight', { size: 20 })}</span>`;
   return `<a href="#/ex/${ex.id}${day ? `?d=${day}` : ''}" class="drill ${next ? 'next' : ''}" style="--c:${cat.color}">
     <div class="d-icon">${icon(CATEGORY_ICON[ex.category], { size: 26 })}</div>
     <div class="d-body">
-      <div class="d-meta">${cat.name} <span class="t">· ${icon('clock', { size: 13 })} ${ex.duration_min} мин</span></div>
+      <div class="d-meta">${cat.name} <span class="t">${icon('clock', { size: 13 })} ${ex.duration_min} мин</span></div>
       <div class="d-title">${esc(ex.title)}</div>
       <div class="d-sub">${esc(ex.summary)}</div>
     </div>
@@ -192,7 +192,7 @@ function viewHome() {
   return `${topbar({ title: 'Басты' })}
   <main class="page fade-in">
     <div>
-      <h2 class="h-display">Сәлем, ${esc(name || 'чемпион')}! 👋</h2>
+      <h2 class="h-display">Сәлем, ${esc(name || 'чемпион')}!</h2>
       <p class="muted" style="margin:6px 0 0">Бүгінгі жаттығуға дайынсың ба?</p>
     </div>
 
@@ -274,7 +274,7 @@ function exHeader(ex, day) {
   const doneCount = plan.filter((e) => store.isDone(e.id, day)).length;
   return `<div class="ex-head" style="--c:${cat.color}">
     <div class="row between">
-      <span class="chip" style="background:color-mix(in srgb, ${cat.color} 15%, transparent);color:${cat.color}"><span class="dot"></span>${cat.name} · ${ex.duration_min} мин</span>
+      <span class="chip" style="background:color-mix(in srgb, ${cat.color} 15%, transparent);color:${cat.color}"><span class="dot"></span>${cat.name}, ${ex.duration_min} мин</span>
       ${pos >= 0 ? `<span class="chip gray">${pos + 1} / ${plan.length} жаттығу</span>` : ''}
     </div>
     <h2 class="h-lg" style="margin-top:12px">${esc(ex.title)}</h2>
@@ -343,14 +343,14 @@ function viewTactics(ex, day) {
     ${doneBanner(ex, day)}
     <section class="pitch-card">
       <div class="row between" style="padding:2px 4px 8px">
-        <span class="chip gray" style="text-transform:none;letter-spacing:0">${icon('eye', { size: 14 })} Біз жоғары қарай шабуылдаймыз</span>
+        <span class="chip gray">${icon('eye', { size: 14 })} Біз жоғары қарай шабуылдаймыз</span>
         <button class="icon-btn" data-replay aria-label="Схеманы қайта көрсету">${icon('refresh', { size: 18 })}</button>
       </div>
       <div data-pitch>${renderPitch(p, { uid: ex.id })}</div>
       <div class="legend">
-        <span><i style="background:#22E55B"></i>Біздің команда</span>
-        <span><i style="background:#E11D48"></i>Қарсылас</span>
-        <span><i style="background:transparent;border:2px solid #FDE047"></i>Назардағы ойыншы</span>
+        <span><i style="background:#FFC93C"></i>Біздің команда</span>
+        <span><i style="background:#E5483A"></i>Қарсылас</span>
+        <span><i style="background:transparent;border:2px solid #F2EFE6"></i>Назардағы ойыншы</span>
         ${LEGEND.filter((l) => (p.arrows || []).some((a) => a.k === l.k)).map((l) =>
           `<span><em style="border-color:${l.color};${l.dashed ? 'border-top-style:dashed' : ''}"></em>${l.label}</span>`).join('')}
       </div>
@@ -395,7 +395,7 @@ function viewTactics(ex, day) {
         <p style="margin:0;line-height:1.55">${esc(q.explain)}</p>
       </section>`;
       if (!isDone) {
-        app.querySelector('[data-actions]').innerHTML = `<button class="btn btn-primary" data-finish>Аяқтау және келесіге өту ${icon('arrowRight', { size: 20 })}</button>`;
+        app.querySelector('[data-actions]').innerHTML = `<button class="btn btn-primary" data-finish>Аяқтау және келесіге өту</button>`;
         app.querySelector('[data-finish]').onclick = () => finish(ex, day, ok ? 'quiz:right' : 'quiz:wrong');
       }
     };
@@ -424,7 +424,7 @@ function viewWorkout(ex, day) {
       <span class="chip hero-badge ${intensity[1]}">${icon('bolt', { size: 12 })} ${intensity[0]}</span>
       <div class="row between" style="align-items:flex-end;gap:12px">
         <div class="h-md" style="max-width:60%">${esc(ex.title)}</div>
-        <span class="chip" style="text-transform:none;letter-spacing:0">${sets} сет × ${esc(p.reps)}</span>
+        <span class="chip">${sets} сет × ${esc(p.reps)}</span>
       </div>
     </section>
 
@@ -468,8 +468,8 @@ function viewWorkout(ex, day) {
       let primary;
       if (st.phase === 'idle') primary = `<button class="btn btn-primary" data-act="start">${icon('play', { size: 20, fill: true })} Бастау</button>`;
       else if (st.phase === 'work') primary = `<button class="btn btn-primary" data-act="set">${icon('check', { size: 20 })} Сет ${st.setsDone + 1} аяқталды</button>`;
-      else if (st.phase === 'rest') primary = `<button class="btn btn-cyan btn" data-act="skip">${icon('arrowRight', { size: 20 })} Келесі сетке өту</button>`;
-      else primary = `<button class="btn btn-primary" data-act="finish">${icon('checkCircle', { size: 20 })} Аяқтау · +${XP_PER} XP</button>`;
+      else if (st.phase === 'rest') primary = `<button class="btn btn-cyan btn" data-act="skip">Келесі сетке өту</button>`;
+      else primary = `<button class="btn btn-primary" data-act="finish">${icon('checkCircle', { size: 20 })} Аяқтау, +${XP_PER} XP</button>`;
       const secondary = (st.phase === 'work' || st.phase === 'rest')
         ? `<div class="btn-row">
             <button class="btn btn-secondary" data-act="pause">${icon(st.paused ? 'play' : 'pause', { size: 18 })} ${st.paused ? 'Жалғастыру' : 'Үзіліс'}</button>
@@ -540,7 +540,7 @@ function viewMental(ex, day) {
     ${breath ? `
     <section class="card lg" style="background:linear-gradient(180deg,#18243A,#121A2A)">
       <div class="row between">
-        <span class="chip gray" style="text-transform:none;letter-spacing:0">${icon('wind', { size: 14 })} ${breath.join('-')} әдісі</span>
+        <span class="chip gray">${icon('wind', { size: 14 })} ${breath.join('-')} әдісі</span>
         <span class="chip" data-remain>${icon('timer', { size: 12 })} ${fmt(totalSec)}</span>
       </div>
       <div class="breath-stage">
@@ -560,7 +560,7 @@ function viewMental(ex, day) {
 
     <section class="stack">
       <div class="section-title"><h3 class="h-md">${icon('edit', { size: 20, cls: 'green' })} Жаттығушы күнделігі</h3><span class="chip">Бүгін</span></div>
-      <div class="label muted" id="mood-label" style="text-transform:none;letter-spacing:0;font-size:14px">Бүгінгі көңіл-күйің:</div>
+      <div class="label muted" id="mood-label" style="font-size:14px">Бүгінгі көңіл-күйің:</div>
       <div class="mood-grid" role="group" aria-labelledby="mood-label">${MOODS.map(([ic, t, s], i) => `<button class="mood" data-mood="${i}" aria-pressed="false"><span class="e">${icon(ic, { size: 20 })}</span><span><b>${t}</b><small>${s}</small></span></button>`).join('')}</div>
       <label class="field-label" for="journal" style="margin-top:6px">${esc(p.journal || 'Бүгінгі ойың:')}</label>
       <textarea id="journal" class="field" maxlength="500" placeholder="Мысалы: Бүгін маңызды матч, аздап толқу бар, бірақ дайындығым жоғары...">${esc(existing.replace(/^\[.*?\]\s*/, ''))}</textarea>
@@ -622,7 +622,7 @@ function viewMental(ex, day) {
           for (let i = 0; i < 4; i++) { if (inCycle < acc + breath[i]) { ph = i; break; } acc += breath[i]; }
           const left = breath[ph] - (inCycle - acc);
           phaseEl.textContent = names[ph];
-          secEl.textContent = `${left} сек · ${Math.floor(t / cycleSec) + 1}/${p.rounds}`;
+          secEl.textContent = `${left} сек, ${Math.floor(t / cycleSec) + 1}-цикл`;
           core.classList.toggle('big', ph === 0 || ph === 1);
           phaseSpans.forEach((s, i) => s.classList.toggle('on', i === ph));
           remainEl.innerHTML = `${icon('timer', { size: 12 })} ${fmt(totalSec - t)} қалды`;
@@ -660,7 +660,7 @@ function viewDrills() {
   <main class="page fade-in">
     <div>
       <h2 class="h-lg">Жаттығулар кітапханасы</h2>
-      <p class="muted" style="margin:6px 0 0">${state.exercises.length} жаттығу · кез келгенін қазір орындауға болады</p>
+      <p class="muted" style="margin:6px 0 0">${state.exercises.length} жаттығу. Кез келгенін қазір орындауға болады.</p>
     </div>
     <div class="filters">
       <button class="filter ${libFilter === 'all' ? 'on' : ''}" data-f="all">Барлығы</button>
@@ -686,14 +686,14 @@ function radar(scores) {
     ['physical', 0, 1, 'Физика', 'middle', 20],
     ['technique', -1, 0, 'Техника', 'end', 4],
   ];
-  const grid = [0.25, 0.5, 0.75, 1].map((k) => `<polygon points="${axes.map(([, x, y]) => `${cx + x * R * k},${cy + y * R * k}`).join(' ')}" fill="none" stroke="rgba(148,163,184,.18)"/>`).join('');
+  const grid = [0.25, 0.5, 0.75, 1].map((k) => `<polygon points="${axes.map(([, x, y]) => `${cx + x * R * k},${cy + y * R * k}`).join(' ')}" fill="none" stroke="rgba(242,239,230,.22)" stroke-dasharray="3 3"/>`).join('');
   const pts = axes.map(([c, x, y]) => { const k = scores[c] / 100; return [cx + x * R * k, cy + y * R * k]; });
-  const lines = axes.map(([, x, y]) => `<line x1="${cx}" y1="${cy}" x2="${cx + x * R}" y2="${cy + y * R}" stroke="rgba(148,163,184,.18)"/>`).join('');
-  const labels = axes.map(([c, x, y, name, anchor, dy]) => `<text x="${cx + x * (R + 8)}" y="${cy + y * (R + 4) + dy}" text-anchor="${anchor}" ${c === 'mental' ? 'style="fill:#00D2FF"' : ''}>${name}</text>`).join('');
+  const lines = axes.map(([, x, y]) => `<line x1="${cx}" y1="${cy}" x2="${cx + x * R}" y2="${cy + y * R}" stroke="rgba(242,239,230,.22)" stroke-dasharray="3 3"/>`).join('');
+  const labels = axes.map(([c, x, y, name, anchor, dy]) => `<text x="${cx + x * (R + 8)}" y="${cy + y * (R + 4) + dy}" text-anchor="${anchor}" ${c === 'mental' ? 'style="fill:#8AB4FF"' : ''}>${name}</text>`).join('');
   return `<svg class="radar" viewBox="-45 0 390 265" width="100%">
     ${grid}${lines}
-    <polygon points="${pts.map((p) => p.join(',')).join(' ')}" fill="rgba(34,229,91,.28)" stroke="#22E55B" stroke-width="2.5" style="filter:drop-shadow(0 0 8px rgba(34,229,91,.6))"/>
-    ${pts.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5" fill="#22E55B" stroke="#0B0F1A" stroke-width="2"/>`).join('')}
+    <polygon points="${pts.map((p) => p.join(',')).join(' ')}" fill="rgba(255,201,60,.25)" stroke="#FFC93C" stroke-width="2.5"/>
+    ${pts.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5" fill="#FFC93C" stroke="#0A2B21" stroke-width="2"/>`).join('')}
     ${labels}
   </svg>`;
 }
@@ -750,7 +750,7 @@ function viewProgress() {
       </div>
       <div class="row between" style="margin:16px 0 8px;font:700 13px var(--head)"><span class="row" style="gap:6px">${icon('trend', { size: 16, cls: 'green' })} Тәжірибе ұпайы</span><span class="green tnum">${into} / ${need} XP</span></div>
       <div class="bar" style="height:10px"><i style="width:${(into / need) * 100}%;background:var(--green);box-shadow:var(--glow-green)"></i></div>
-      <div class="row between dim" style="margin-top:8px;font:700 12px var(--head);letter-spacing:.04em;text-transform:uppercase"><span>Келесі деңгейге: ${need - into} XP</span><span class="green">Барлығы ${xp} XP</span></div>
+      <div class="row between dim" style="margin-top:8px;font:700 12px var(--head)"><span>Келесі деңгейге: ${need - into} XP</span><span class="green">Барлығы ${xp} XP</span></div>
     </section>
 
     <section class="card lg">
@@ -804,7 +804,7 @@ function viewProgress() {
 
     <section class="card lg row between">
       <div><div class="h-md">Нәтижені бөліс</div><div class="muted" style="font-size:13px">Жаттықтырушың мен достарыңа көрсет</div></div>
-      <button class="btn btn-primary btn-sm" data-share>${icon('arrowRight', { size: 16 })} Бөлісу</button>
+      <button class="btn btn-primary btn-sm" data-share>Бөлісу</button>
     </section>
   </main>
   ${nav('progress')}`;
@@ -862,7 +862,7 @@ function viewOnboarding() {
       <p class="muted" style="margin:6px 0 0">Күндік жоспар сенің жасыңа, позицияңа және деңгейіңе қарай құрылады.</p>
     </div>
     ${profileForm(state.profile || {})}
-    <button class="btn btn-primary" data-save>Жоспарды құру ${icon('arrowRight', { size: 20 })}</button>
+    <button class="btn btn-primary" data-save>Жоспарды құру</button>
   </main>`;
   const mount = () => bindProfileForm(state.profile || {}, async (v) => {
     await store.saveProfile(v);
@@ -880,7 +880,7 @@ function viewProfile() {
       <div class="avatar lg">${esc(initials(p.name))}</div>
       <div style="min-width:0">
         <div class="h-md">${esc(p.name)}</div>
-        <div class="muted" style="font-size:13px">${esc(POSITIONS[p.position] || '')} · ${esc(AGE_GROUPS[p.age_group] || '')}</div>
+        <div class="muted" style="font-size:13px">${esc(POSITIONS[p.position] || '')}, ${esc(AGE_GROUPS[p.age_group] || '')}</div>
         <div style="margin-top:8px">${state.mode === 'cloud'
           ? `<span class="chip">${icon('shield', { size: 12 })} ${esc(state.user?.email || 'Аккаунт')}</span>`
           : `<span class="chip orange">${icon('info', { size: 12 })} Қонақ режимі</span>`}</div>
@@ -914,6 +914,7 @@ function viewProfile() {
 // — Кіру —
 function viewAuth() {
   const html = `<main class="page no-nav fade-in">
+    <div class="row" style="margin:-6px 0 -8px -8px"><a class="icon-btn" href="#/" aria-label="Басты бетке">${icon('arrowLeft', { size: 22 })}</a><span class="muted" style="font-size:14px">Футбол Коуч</span></div>
     <section class="auth-hero">
       <div class="big-ball">${icon('ball', { size: 220 })}</div>
       <span class="chip" style="width:fit-content">${icon('bolt', { size: 12 })} Күн сайын жаңа жаттығу</span>
@@ -961,7 +962,7 @@ function viewAuth() {
     app.querySelector('[data-in]').onclick = async () => {
       if (!valid()) return;
       busy(true); show('Кіру...');
-      try { await store.signIn(email.value.trim(), pass.value); render(); }
+      try { await store.signIn(email.value.trim(), pass.value); location.hash = '#/'; render(); }
       catch (e) { show(authError(e), true); busy(false); }
     };
     app.querySelector('[data-up]').onclick = async () => {
@@ -973,7 +974,7 @@ function viewAuth() {
         else render();
       } catch (e) { show(authError(e), true); busy(false); }
     };
-    app.querySelector('[data-guest]').onclick = () => { store.startGuest(); render(); };
+    app.querySelector('[data-guest]').onclick = () => { store.startGuest(); location.hash = '#/'; render(); };
     [email, pass].forEach((el) => el.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !app.querySelector('[data-in]').disabled) app.querySelector('[data-in]').click();
     }));
@@ -1016,11 +1017,11 @@ function homeLessonCard() {
   return `<a href="#/lesson/${next.id}" class="card lesson-hero">
     <div class="row between" style="margin-bottom:8px">
       <span class="label green">${icon('school', { size: 14 })} ${esc(POSITIONS[next.position])} мектебі</span>
-      <span class="chip gray">${next.questions.length} сұрақ · ${next.duration_min} мин</span>
+      <span class="chip gray">${next.questions.length} сұрақ, ${next.duration_min} мин</span>
     </div>
     <div class="h-md">${esc(next.title)}</div>
     <div class="muted" style="font-size:13px;margin-top:4px">${esc(next.summary)}</div>
-    <div class="row" style="margin-top:12px;gap:8px;color:var(--green);font:700 13px var(--head)">${r ? 'Қайта өту' : 'Сабақты бастау'} ${icon('arrowRight', { size: 16 })}</div>
+    <div class="row" style="margin-top:12px;gap:8px;color:var(--green);font:700 13px var(--head)">${r ? 'Қайта өту' : 'Сабақты бастау'}</div>
   </a>`;
 }
 
@@ -1050,7 +1051,7 @@ function viewLessons() {
         return `<a href="#/lesson/${l.id}" class="drill" style="--c:var(--green)">
           <div class="d-icon">${icon('school', { size: 26 })}</div>
           <div class="d-body">
-            <div class="d-meta">${esc(POSITIONS[l.position])} <span class="t">· ${l.questions.length} сұрақ · ${l.duration_min} мин</span></div>
+            <div class="d-meta">${esc(POSITIONS[l.position])} <span class="t">${l.questions.length} сұрақ, ${l.duration_min} мин</span></div>
             <div class="d-title">${esc(l.title)}</div>
             <div class="d-sub">${esc(l.summary)}</div>
           </div>
@@ -1078,7 +1079,7 @@ function viewLesson(id) {
     const root = app.querySelector('[data-lesson]');
     const header = () => `<div class="ex-head" style="--c:var(--green)">
       <div class="row between">
-        <span class="chip"><span class="dot"></span>${esc(POSITIONS[lesson.position])} · ${lesson.duration_min} мин</span>
+        <span class="chip"><span class="dot"></span>${esc(POSITIONS[lesson.position])}, ${lesson.duration_min} мин</span>
         <span class="chip gray">${st.step === 0 ? 'Теория' : st.step <= qs.length ? `Сұрақ ${st.step} / ${qs.length}` : 'Нәтиже'}</span>
       </div>
       <h2 class="h-lg" style="margin-top:12px">${esc(lesson.title)}</h2>
@@ -1094,7 +1095,7 @@ function viewLesson(id) {
             <span class="n">${i + 1}</span>
             <div><div class="h-sm">${esc(t.h)}</div><p class="muted" style="margin:6px 0 0;line-height:1.55">${esc(t.p)}</p></div>
           </section>`).join('')}</div>
-          <button class="btn btn-primary" data-next>Сұрақтарға өту ${icon('arrowRight', { size: 20 })}</button>`;
+          <button class="btn btn-primary" data-next>Сұрақтарға өту</button>`;
       } else if (st.step <= qs.length) {
         const q = qs[st.step - 1];
         const answered = st.answers[st.step - 1];
@@ -1102,9 +1103,9 @@ function viewLesson(id) {
           ${q.scheme ? `<section class="pitch-card">
             <div data-pitch>${renderPitch(q.scheme, { uid: `${lesson.id}-${st.step}` })}</div>
             <div class="legend">
-              <span><i style="background:#22E55B"></i>Біздің команда</span>
-              <span><i style="background:#E11D48"></i>Қарсылас</span>
-              <span><i style="background:transparent;border:2px solid #FDE047"></i>Сен</span>
+              <span><i style="background:#FFC93C"></i>Біздің команда</span>
+              <span><i style="background:#E5483A"></i>Қарсылас</span>
+              <span><i style="background:transparent;border:2px solid #F2EFE6"></i>Сен</span>
               ${LEGEND.filter((l) => (q.scheme.arrows || []).some((a) => a.k === l.k)).map((l) =>
                 `<span><em style="border-color:${l.color};${l.dashed ? 'border-top-style:dashed' : ''}"></em>${l.label}</span>`).join('')}
             </div>
@@ -1133,7 +1134,7 @@ function viewLesson(id) {
             <p style="margin:0;line-height:1.55">${esc(q.explain)}</p>
           </section>`;
           const last = st.step === qs.length;
-          root.querySelector('[data-actions]').innerHTML = `<button class="btn btn-primary" data-next>${last ? 'Нәтижені көру' : 'Келесі сұрақ'} ${icon('arrowRight', { size: 20 })}</button>`;
+          root.querySelector('[data-actions]').innerHTML = `<button class="btn btn-primary" data-next>${last ? 'Нәтижені көру' : 'Келесі сұрақ'}</button>`;
           root.querySelector('[data-next]').onclick = () => { st.step++; draw(); };
         };
         opts.forEach((b) => { b.onclick = () => { st.answers[st.step - 1] = Number(b.dataset.opt); reveal(Number(b.dataset.opt)); }; });
@@ -1186,7 +1187,7 @@ function viewStories() {
           <div class="s-avatar">${esc(initials(p.name))}</div>
           <div style="flex:1;min-width:0">
             <div class="h-sm">${esc(p.name)}</div>
-            <div class="muted" style="font-size:13px">${esc(p.country)} · ${esc(p.position)}</div>
+            <div class="muted" style="font-size:13px">${esc(p.country)}, ${esc(p.position)}</div>
             <div class="dim" style="font-size:12px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.lesson)}</div>
           </div>
           <span class="dim">${icon('chevronRight', { size: 20 })}</span>
@@ -1213,7 +1214,7 @@ function viewStory(id) {
       <div class="hero-ic">${icon('trophy', { size: 190 })}</div>
       <div class="s-avatar lg">${esc(initials(p.name))}</div>
       <h2 class="h-lg" style="margin-top:12px">${esc(p.name)}</h2>
-      <div class="muted">${esc(p.country)} · ${esc(p.position)}</div>
+      <div class="muted">${esc(p.country)}, ${esc(p.position)}</div>
     </section>
     <section class="card">
       <div class="label muted" style="margin-bottom:10px">Мансап жолы</div>
@@ -1226,7 +1227,7 @@ function viewStory(id) {
       <div class="label" style="color:${p.color};margin-bottom:8px">Саған сабақ</div>
       <p style="margin:0;font:600 16px/1.5 var(--head)">${esc(p.lesson)}</p>
     </section>
-    <a class="btn btn-secondary" href="#/story/${next.id}">Келесі: ${esc(next.name)} ${icon('arrowRight', { size: 18 })}</a>
+    <a class="btn btn-secondary" href="#/story/${next.id}">Келесі: ${esc(next.name)}</a>
   </main>`;
   return { html };
 }
@@ -1333,6 +1334,202 @@ function viewAsk() {
   return { html, mount };
 }
 
+// ───────────── LANDING: тіркелмеген қонаққа арналған басты бет ─────────────
+function landingBoard() {
+  // Көлденең алаң 105×68, біз оңға шабуылдаймыз. Магниттер бір рет орнына отырады, сосын бор жебелері сызылады.
+  const ours = [
+    [1, 6, 34], [2, 28, 58], [4, 25, 41], [5, 25, 27], [3, 28, 10],
+    [6, 44, 34], [8, 47, 18], [10, 52, 50],
+    [7, 70, 60], [9, 66, 34], [11, 72, 9],
+  ];
+  const theirs = [[4, 74, 28], [5, 76, 41], [6, 64, 24], [8, 63, 46], [2, 86, 56], [3, 88, 14], [1, 100, 34]];
+  const W = 105, H = 68;
+  const s = 'stroke="rgba(242,239,230,.5)" stroke-width=".35" fill="none"';
+  let stripes = '';
+  for (let i = 0; i < 10; i++) if (i % 2 === 0) stripes += `<rect x="${(W / 10) * i}" y="0" width="${W / 10}" height="${H}" fill="rgba(242,239,230,.028)"/>`;
+  const lines = `
+    <rect x="1" y="1" width="${W - 2}" height="${H - 2}" ${s}/>
+    <line x1="${W / 2}" y1="1" x2="${W / 2}" y2="${H - 1}" ${s}/>
+    <circle cx="${W / 2}" cy="${H / 2}" r="9.15" ${s}/>
+    <rect x="1" y="${(H - 40.3) / 2}" width="16.5" height="40.3" ${s}/>
+    <rect x="1" y="${(H - 18.3) / 2}" width="5.5" height="18.3" ${s}/>
+    <rect x="${W - 17.5}" y="${(H - 40.3) / 2}" width="16.5" height="40.3" ${s}/>
+    <rect x="${W - 6.5}" y="${(H - 18.3) / 2}" width="5.5" height="18.3" ${s}/>
+    <path d="M 17.5 26.7 A 9.15 9.15 0 0 1 17.5 41.3" ${s}/>
+    <path d="M ${W - 17.5} 26.7 A 9.15 9.15 0 0 0 ${W - 17.5} 41.3" ${s}/>`;
+  const arrows = [
+    // [x1,y1,x2,y2, kind, delay]
+    [44, 34, 64, 34, 'pass', 1.55],
+    [47, 18, 79, 24, 'run', 1.95],
+    [66, 34, 78, 27, 'pass', 2.55],
+    [70, 60, 90, 58, 'run', 2.95],
+  ];
+  const arrowEls = arrows.map(([x1, y1, x2, y2, k, d]) => {
+    const len = Math.hypot(x2 - x1, y2 - y1);
+    const ux = (x2 - x1) / len, uy = (y2 - y1) / len;
+    const ex = x2 - ux * 3, ey = y2 - uy * 3; // ұшына орын
+    const bx = ex - ux * 2.2, by = ey - uy * 2.2, px = -uy * 1.3, py = ux * 1.3;
+    const col = k === 'pass' ? '#8AB4FF' : '#F2EFE6';
+    const dash = k === 'run' ? 'stroke-dasharray="1.6 1.2"' : '';
+    // жүгіріс сызығы үзік болғандықтан «сызылу» анимациясын тек паста қолданамыз
+    const line = k === 'run'
+      ? `<path class="head-tip" style="--d:${d}s" d="M ${x1} ${y1} L ${bx} ${by}" stroke="${col}" stroke-width=".7" stroke-linecap="round" ${dash} fill="none"/>`
+      : `<path class="chalk-line" style="--len:${len.toFixed(1)};--d:${d}s" d="M ${x1} ${y1} L ${bx} ${by}" stroke="${col}" stroke-width=".7" stroke-linecap="round" fill="none"/>`;
+    return `${line}<path class="head-tip" style="--d:${(d + 0.5).toFixed(2)}s" d="M ${ex} ${ey} L ${bx + px} ${by + py} L ${bx - px} ${by - py} Z" fill="${col}"/>`;
+  }).join('');
+  const magnet = (n, x, y, team, i) => {
+    const fill = team === 'a' ? '#FFC93C' : '#E5483A';
+    const txt = team === 'a' ? '#16261D' : '#FFFFFF';
+    const fx = team === 'a' ? -14 : 14, fy = 10;
+    return `<g class="magnet" style="--d:${(0.08 * i).toFixed(2)}s;--fx:${fx}px;--fy:${fy}px">
+      <circle cx="${x}" cy="${y + 0.55}" r="2.7" fill="rgba(0,0,0,.35)"/>
+      <circle cx="${x}" cy="${y}" r="2.7" fill="${fill}"/>
+      <circle cx="${x}" cy="${y}" r="2.05" fill="none" stroke="rgba(0,0,0,.18)" stroke-width=".35"/>
+      <text x="${x}" y="${y + 0.95}" text-anchor="middle" font-size="2.5" font-weight="700" fill="${txt}" font-family="Unbounded,Montserrat,sans-serif">${n}</text>
+    </g>`;
+  };
+  const mags = [...ours.map((m, i) => magnet(m[0], m[1], m[2], 'a', i)), ...theirs.map((m, i) => magnet(m[0], m[1], m[2], 'b', i + 4))].join('');
+  const ball = `<g class="magnet" style="--d:1.2s;--fx:0px;--fy:-6px"><circle cx="45.6" cy="35.8" r="1.1" fill="#fff" stroke="#111" stroke-width=".25"/></g>`;
+  return `<figure class="board" style="margin:0">
+    <svg viewBox="-1 -1 ${W + 2} ${H + 2}" role="img" aria-label="Тактика тақтасы: біздің команда үшінші адамның жүгірісімен шабуыл жасайды">
+      <rect x="-1" y="-1" width="${W + 2}" height="${H + 2}" rx="3" fill="#145240"/>
+      ${stripes}${lines}${arrowEls}${mags}${ball}
+    </svg>
+    <figcaption class="board-caption"><span>Бүгінгі сабақ: үшінші адамның жүгірісі</span><span style="color:var(--green)">Тактика</span></figcaption>
+  </figure>`;
+}
+
+const POS_ZONES = { gk: [1, 20, 14, 28], def: [12, 4, 22, 60], mid: [36, 4, 30, 60], fwd: [64, 4, 30, 60] };
+function posBoard(pos) {
+  const W = 105, H = 68;
+  const s = 'stroke="rgba(242,239,230,.45)" stroke-width=".4" fill="none"';
+  const [x, y, w, h] = POS_ZONES[pos];
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;border-radius:18px" aria-hidden="true">
+    <rect width="${W}" height="${H}" fill="#145240"/>
+    <rect x="1" y="1" width="${W - 2}" height="${H - 2}" ${s}/><line x1="${W / 2}" y1="1" x2="${W / 2}" y2="${H - 1}" ${s}/>
+    <circle cx="${W / 2}" cy="${H / 2}" r="9" ${s}/>
+    <rect x="1" y="${(H - 40) / 2}" width="16.5" height="40" ${s}/><rect x="${W - 17.5}" y="${(H - 40) / 2}" width="16.5" height="40" ${s}/>
+    <rect class="zone" x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="rgba(255,201,60,.22)" stroke="#FFC93C" stroke-width=".6" stroke-dasharray="2 1.5"/>
+  </svg>`;
+}
+
+let landingPos = 'mid';
+function viewLanding() {
+  const day = [
+    ['tactics', 'whistle', 'Үшбұрыш: пас нұсқалары', 'Алаңдағы жағдайды оқып, шешім қабылда', 8],
+    ['physical', 'bolt', 'Жарылғыш спринттер', 'Таймер мен сеттер сені бағыттайды', 15],
+    ['mental', 'brain', 'Шаршы тыныс', 'Матч алдындағы толқуды бас', 4],
+    ['technique', 'ball', 'Қабырғамен пас', 'Екі аяқпен дәлдік пен бірінші жанасу', 10],
+  ];
+  const total = day.reduce((a, d) => a + d[4], 0);
+  const posLessons = (p) => LESSONS.filter((l) => l.position === p);
+  const posPanel = (p) => `<div class="pos-panel" data-pos-panel>
+      ${posBoard(p)}
+      <h3 style="margin-top:18px">${esc(POSITIONS[p])}</h3>
+      <p class="muted" style="margin:0">${posLessons(p).length} сабақ, ${posLessons(p).reduce((a, l) => a + l.questions.length, 0)} тактикалық сұрақ және арнайы жаттығулар.</p>
+      <ul>${posLessons(p).map((l) => `<li>${icon('checkCircle', { size: 18 })}<span><b style="font-weight:600">${esc(l.title)}</b><br><span class="muted" style="font-size:14px">${esc(l.summary)}</span></span></li>`).join('')}</ul>
+    </div>`;
+  const quote = QUOTES[0];
+
+  const html = `<div class="landing">
+  <header class="l-nav"><div class="l-wrap">
+    <a class="l-brand" href="#/" aria-label="Футбол Коуч, басты бет"><i>${icon('ball', { size: 20 })}</i>Футбол Коуч</a>
+    <span class="grow"></span>
+    <button class="link" data-scroll="l-day" style="color:var(--muted);font-weight:500;padding:10px 6px">Жоспар</button>
+    <button class="link" data-scroll="l-pos" style="color:var(--muted);font-weight:500;padding:10px 6px">Позициялар</button>
+    <a class="btn btn-secondary" href="#/auth">Кіру</a>
+  </div></header>
+
+  <main id="main">
+    <section class="l-hero"><div class="l-wrap">
+      <div>
+        <h1>Күн сайын бір&nbsp;қадам алға</h1>
+        <p class="lead">Тактика, физика, психология және техника. Әр күні 15–40 минуттық жеке жоспар, сенің жасыңа, позицияңа және деңгейіңе қарай.</p>
+        <div class="l-cta">
+          <a class="btn btn-primary" href="#/auth">Тегін бастау</a>
+          <button class="btn btn-secondary" data-scroll="l-day">Жоспарды көру</button>
+        </div>
+        <div class="meta">
+          <span><b>${state.exercises.length}</b>жаттығу</span>
+          <span><b>${LESSONS.length}</b>позиция сабағы</span>
+          <span><b>${STORIES.length}</b>аңыз тарихы</span>
+        </div>
+      </div>
+      ${landingBoard()}
+    </div></section>
+
+    <section class="l-section" id="l-day"><div class="l-wrap">
+      <h2>Бір күн, төрт қысқа жаттығу</h2>
+      <p class="sub">Таңертең жоспар өзі құрылады. Әр жаттығуды орындаған сайын серия мен ұпай жиналады, ал прогресс графикте көрінеді.</p>
+      <div class="day">
+        <div class="day-list">
+          ${day.map(([cat, ic, t, sub, min]) => `<div class="day-item" style="--c:${CATEGORIES[cat].color}">
+            <span class="mag">${icon(ic, { size: 24 })}</span>
+            <span><small style="color:${CATEGORIES[cat].color};font-weight:600">${CATEGORIES[cat].name}</small><b>${esc(t)}</b><small>${esc(sub)}</small></span>
+            <span class="min">${min} мин</span>
+          </div>`).join('')}
+        </div>
+        <div class="day-note"><b>${total} мин</b>орташа күндік жоспар. Мектептен кейін де, команда жаттығуының алдында да үлгересің.</div>
+      </div>
+    </div></section>
+
+    <section class="l-section" id="l-pos"><div class="l-wrap">
+      <div class="pos">
+        <div>
+          <h2>Өз позицияңның мектебі</h2>
+          <p class="sub">Қақпашыға, қорғаушыға, жартылай қорғаушыға және шабуылшыға бөлек сабақтар: қысқа теория, алаңдағы жағдай, сұрақ және бапкердің түсіндірмесі.</p>
+          <div class="pos-tabs" role="group" aria-label="Позиция таңдау">
+            ${Object.entries(POSITIONS).map(([k, v]) => `<button class="filter ${k === landingPos ? 'on' : ''}" data-lpos="${k}" aria-pressed="${k === landingPos}">${v}</button>`).join('')}
+          </div>
+        </div>
+        <div data-pos-slot>${posPanel(landingPos)}</div>
+      </div>
+    </div></section>
+
+    <section class="l-section"><div class="l-wrap">
+      <h2>Аңыздар да бір кезде осылай бастаған</h2>
+      <p class="sub">Академиядан шығарылған, соғыстан аман қалған, кеш бастаған. Платформада ${STORIES.length} ойыншының кәсіби жолы бар.</p>
+      <div class="legends">
+        ${STORIES.map((p) => `<article class="legend-card" style="--c:${p.color}">
+          <span class="num" aria-hidden="true">${esc(initials(p.name))}</span>
+          <div><b>${esc(p.name)}</b><div class="muted" style="font-size:14px">${esc(p.country)}, ${esc(p.position.toLowerCase())}</div></div>
+          <p>${esc(p.lesson)}</p>
+        </article>`).join('')}
+      </div>
+    </div></section>
+
+    <figure class="l-quote" style="margin:0"><div class="l-wrap">
+      <blockquote>«${esc(quote.text)}»</blockquote>
+      <figcaption>${esc(quote.author)}, ${esc(quote.role.toLowerCase())}</figcaption>
+    </div></figure>
+
+    <section class="l-final"><div class="l-wrap"><div class="box">
+      <div>
+        <h2>Бүгін бірінші жаттығуды жаса</h2>
+        <p style="margin-top:12px">Тіркелу бір минут алады. Тіркелмей де бастауға болады, ол кезде прогресс осы құрылғыда сақталады.</p>
+      </div>
+      <a class="btn" href="#/auth">Тегін бастау</a>
+    </div></div></section>
+  </main>
+
+  <footer class="l-foot"><div class="l-wrap"><span>© ${new Date().getFullYear()} Футбол Коуч</span><span>Қазақ тілінде, жас футболшыларға арналған</span></div></footer>
+  </div>`;
+
+  const mount = () => {
+    app.querySelectorAll('[data-scroll]').forEach((b) => {
+      b.onclick = () => document.getElementById(b.dataset.scroll)?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    });
+    app.querySelectorAll('[data-lpos]').forEach((b) => {
+      b.onclick = () => {
+        landingPos = b.dataset.lpos;
+        app.querySelectorAll('[data-lpos]').forEach((x) => { const on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-pressed', String(on)); });
+        app.querySelector('[data-pos-slot]').innerHTML = posPanel(landingPos);
+      };
+    });
+  };
+  return { html, mount, wide: true };
+}
+
 // ───────────── Маршрутизатор ─────────────
 function parseHash() {
   const h = location.hash.replace(/^#/, '') || '/';
@@ -1348,7 +1545,7 @@ function render() {
   cleanups.forEach((f) => f());
   cleanups = [];
   let view;
-  if (!state.mode) view = viewAuth();
+  if (!state.mode) view = parseHash().parts[0] === 'auth' ? viewAuth() : viewLanding();
   else if (!state.profile || !state.profile.level) view = viewOnboarding();
   else {
     const { parts, params } = parseHash();
@@ -1366,6 +1563,7 @@ function render() {
     else view = { html: viewHome() };
   }
   if (typeof view === 'string') view = { html: view };
+  app.classList.toggle('wide', !!view.wide);
   app.innerHTML = view.html;
   window.scrollTo(0, 0);
   renderedDay = today();
