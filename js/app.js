@@ -335,9 +335,10 @@ function videoCard(id) {
   if (!v) return '';
   return `<section class="video-card">
     <button class="video-facade" data-yt="${v.yt}" aria-label="Бейнені қосу: ${esc(v.t)}">
-      <img src="https://i.ytimg.com/vi/${v.yt}/hqdefault.jpg" alt="" loading="lazy" decoding="async" width="480" height="360" onerror="this.style.visibility='hidden'">
+      <img src="https://i.ytimg.com/vi/${v.yt}/hqdefault.jpg" alt="" loading="lazy" decoding="async" width="480" height="360" onerror="this.closest('.video-facade').classList.add('blocked')">
       <span class="play" aria-hidden="true">${icon('play', { size: 28 })}</span>
       <span class="v-badge">Қалай жасалады</span>
+      <span class="v-blocked" aria-hidden="true">Бейне осы терезеде ашылмайды.<br>Басыңыз, YouTube-та ашылады</span>
     </button>
     <div class="v-meta">
       <div><b>${esc(v.t)}</b><small>Ағылшын тілінде, бірақ қимылдарды көріп-ақ түсінесің</small></div>
@@ -349,6 +350,8 @@ document.addEventListener('click', (e) => {
   const b = e.target.closest('[data-yt]');
   if (!b) return;
   const id = b.dataset.yt;
+  // Сыртқы мазмұн бұғатталған ортада (мысалы, алдын ала көру терезесі) YouTube-ты жаңа бетте ашамыз
+  if (b.classList.contains('blocked')) { window.open(`https://www.youtube.com/watch?v=${id}`, '_blank', 'noopener'); return; }
   const f = document.createElement('iframe');
   f.src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&playsinline=1`;
   f.title = b.getAttribute('aria-label') || 'Бейне';
