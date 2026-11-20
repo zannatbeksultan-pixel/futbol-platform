@@ -1,4 +1,5 @@
 import { VIDEOS } from './videos.js';
+import { MOTIONS, MOTION_FOR, mountMotion } from './motion.js';
 import { CATEGORIES, CATEGORY_ORDER, LEVELS, POSITIONS, AGE_GROUPS } from './data.js';
 import * as store from './store.js';
 import { state } from './store.js';
@@ -330,14 +331,35 @@ function exHeader(ex, day) {
 }
 
 // Бейне: алдымен мұқаба (фото), басқанда ғана YouTube жүктеледі
+// «Қалай жасалады»: кодпен салынған футболшы анимациясы (интернетсіз ойнайды),
+// астында бапкердің нағыз бейнесі (YouTube) қосымша ретінде.
 function videoCard(id) {
+  const name = MOTION_FOR[id];
+  const m = name && MOTIONS[name];
   const v = VIDEOS[id];
-  if (!v) return '';
+  if (!m && !v) return '';
+  if (!m) return ytCard(v);
+  return `<section class="video-card motion-card">
+    <div class="m-stage" data-m-stage>
+      <canvas data-motion="${name}" width="400" height="225" role="img" aria-label="Анимация: ${esc(m.cap)}"></canvas>
+      <span class="v-badge">Қалай жасалады</span>
+      <div class="m-ctrl">
+        <button class="m-btn" data-m-play aria-label="Тоқтату">${icon('pause', { size: 18 })}</button>
+        <button class="m-btn" data-m-speed aria-pressed="false" aria-label="Баяулату">0.5×</button>
+      </div>
+    </div>
+    <div class="v-meta">
+      <div><b>${esc(m.cap)}</b><small>Баяулатып, қимылды қайталап көр</small></div>
+      ${v ? `<button class="v-link" data-show-video="${v.yt}" data-title="${esc(v.t)}">${icon('play', { size: 14 })} Бейне</button>` : ''}
+    </div>
+  </section>`;
+}
+function ytCard(v) {
   return `<section class="video-card">
     <button class="video-facade" data-yt="${v.yt}" aria-label="Бейнені қосу: ${esc(v.t)}">
       <img src="https://i.ytimg.com/vi/${v.yt}/hqdefault.jpg" alt="" loading="lazy" decoding="async" width="480" height="360" onerror="this.closest('.video-facade').classList.add('blocked')">
       <span class="play" aria-hidden="true">${icon('play', { size: 28 })}</span>
-      <span class="v-badge">Қалай жасалады</span>
+      <span class="v-badge">Бапкердің бейнесі</span>
       <span class="v-blocked" aria-hidden="true">Бейне осы терезеде ашылмайды.<br>Басыңыз, YouTube-та ашылады</span>
     </button>
     <div class="v-meta">
@@ -345,6 +367,30 @@ function videoCard(id) {
       <a class="v-link" href="https://www.youtube.com/watch?v=${v.yt}" target="_blank" rel="noopener">YouTube</a>
     </div>
   </section>`;
+}
+function mountMotions(root) {
+  root.querySelectorAll('canvas[data-motion]:not([data-on])').forEach((cv) => {
+    cv.dataset.on = '1';
+    const card = cv.closest('.motion-card');
+    const playBtn = card.querySelector('[data-m-play]'), speedBtn = card.querySelector('[data-m-speed]');
+    const api = mountMotion(cv, cv.dataset.motion, {
+      onState: ({ playing, speed }) => {
+        playBtn.innerHTML = icon(playing ? 'pause' : 'play', { size: 18 });
+        playBtn.setAttribute('aria-label', playing ? 'Тоқтату' : 'Ойнату');
+        speedBtn.setAttribute('aria-pressed', String(speed < 1));
+        speedBtn.classList.toggle('on', speed < 1);
+      },
+    });
+    playBtn.onclick = () => api.toggle();
+    speedBtn.onclick = () => api.setSpeed(speedBtn.classList.contains('on') ? 1 : 0.5);
+    cv.onclick = () => api.toggle();
+    const vb = card.querySelector('[data-show-video]');
+    if (vb) vb.onclick = () => {
+      api.stop();
+      card.outerHTML = ytCard({ yt: vb.dataset.showVideo, t: vb.dataset.title });
+    };
+    cleanups.push(() => api.stop());
+  });
 }
 document.addEventListener('click', (e) => {
   const b = e.target.closest('[data-yt]');
@@ -1177,6 +1223,7 @@ function viewLesson(id) {
             <div><div class="h-sm">${esc(t.h)}</div><p class="muted" style="margin:6px 0 0;line-height:1.55">${esc(t.p)}</p></div>
           </section>`).join('')}</div>
           <button class="btn btn-primary" data-next>Сұрақтарға өту</button>`;
+        mountMotions(root);
       } else if (st.step <= qs.length) {
         const q = qs[st.step - 1];
         const answered = st.answers[st.step - 1];
@@ -1733,6 +1780,7 @@ function render() {
   app.querySelectorAll('[data-back]').forEach((b) => { b.onclick = () => { location.hash = backTo; }; });
   app.querySelectorAll('[data-bell]').forEach((b) => { b.onclick = () => toast('Жаңа хабарлама жоқ'); });
   view.mount?.();
+  mountMotions(app);
 }
 
 window.addEventListener('hashchange', render);
