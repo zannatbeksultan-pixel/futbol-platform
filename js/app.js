@@ -1,3 +1,4 @@
+import { VIDEOS } from './videos.js';
 import { CATEGORIES, CATEGORY_ORDER, LEVELS, POSITIONS, AGE_GROUPS } from './data.js';
 import * as store from './store.js';
 import { state } from './store.js';
@@ -328,9 +329,38 @@ function exHeader(ex, day) {
   </div>`;
 }
 
+// Бейне: алдымен мұқаба (фото), басқанда ғана YouTube жүктеледі
+function videoCard(id) {
+  const v = VIDEOS[id];
+  if (!v) return '';
+  return `<section class="video-card">
+    <button class="video-facade" data-yt="${v.yt}" aria-label="Бейнені қосу: ${esc(v.t)}">
+      <img src="https://i.ytimg.com/vi/${v.yt}/hqdefault.jpg" alt="" loading="lazy" decoding="async" width="480" height="360" onerror="this.style.visibility='hidden'">
+      <span class="play" aria-hidden="true">${icon('play', { size: 28 })}</span>
+      <span class="v-badge">Қалай жасалады</span>
+    </button>
+    <div class="v-meta">
+      <div><b>${esc(v.t)}</b><small>Ағылшын тілінде, бірақ қимылдарды көріп-ақ түсінесің</small></div>
+      <a class="v-link" href="https://www.youtube.com/watch?v=${v.yt}" target="_blank" rel="noopener">YouTube</a>
+    </div>
+  </section>`;
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-yt]');
+  if (!b) return;
+  const id = b.dataset.yt;
+  const f = document.createElement('iframe');
+  f.src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&playsinline=1`;
+  f.title = b.getAttribute('aria-label') || 'Бейне';
+  f.allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen';
+  f.allowFullscreen = true;
+  f.className = 'video-frame';
+  b.replaceWith(f);
+});
+
 function stepsCard(ex, title = 'Бапкер нұсқаулары') {
   const cat = CATEGORIES[ex.category];
-  return `<section class="card lg" style="--c:${cat.color}">
+  return `${videoCard(ex.id)}<section class="card lg" style="--c:${cat.color}">
     <div class="row between" style="margin-bottom:14px">
       <h3 class="h-md row" style="gap:8px">${icon('whistle', { size: 20, cls: '' })} ${title}</h3>
     </div>
@@ -402,6 +432,7 @@ function viewTactics(ex, day) {
       </div>
     </section>
 
+    ${videoCard(ex.id)}
     <ol class="steps" style="--c:var(--green)">${ex.steps.map((s, i) => `<li><span class="n">${i + 1}</span><span>${esc(s)}</span></li>`).join('')}</ol>
 
     <section class="card lg">
@@ -1137,6 +1168,7 @@ function viewLesson(id) {
       if (st.step === 0) {
         root.innerHTML = `${header()}
           <p class="muted" style="margin:0">${esc(lesson.summary)}</p>
+          ${videoCard(lesson.id)}
           <div class="stack">${lesson.theory.map((t, i) => `<section class="card theory">
             <span class="n">${i + 1}</span>
             <div><div class="h-sm">${esc(t.h)}</div><p class="muted" style="margin:6px 0 0;line-height:1.55">${esc(t.p)}</p></div>
